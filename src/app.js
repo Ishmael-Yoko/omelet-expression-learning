@@ -23,6 +23,7 @@ const { PasteAnalysisFlow } = window.OmeletPasteAnalysisFlow;
 const { RealtimeFeedbackFlow } = window.OmeletRealtimeFeedbackFlow;
 const { FinalReportFlow } = window.OmeletFinalReportFlow;
 const { TrainingSessionFlow } = window.OmeletTrainingSessionFlow;
+const { TranscriptAnalysisFlow } = window.OmeletTranscriptAnalysisFlow;
 
 class ExpressionTrainer {
   constructor() {
@@ -61,6 +62,17 @@ class ExpressionTrainer {
       openLoading: () => this.reportView.openLoading(),
       renderReport: report => this.reportView.render(report),
       showError: error => this.reportView.showError(error),
+    });
+    this.transcriptAnalysisFlow = new TranscriptAnalysisFlow({
+      analyzeText: text => window.api.analyzeText(text),
+      applyAnalysisToStats,
+      buildAnalysisFeedbackItems,
+      renderFinal: (text, analysis) => {
+        this.transcriptView.renderFinal(text, analysis);
+        this.updateStatsDisplay();
+      },
+      renderInterim: text => this.transcriptView.renderInterim(text),
+      addFeedback: (text, type) => this.feedbackView.add(text, type),
     });
 
     this.initElements();
@@ -226,31 +238,15 @@ class ExpressionTrainer {
   // ===== ASR结果处理 =====
 
   handleASRResult({ text, isFinal }) {
-    if (isFinal) {
-      this.sentences.push(text);
-      this.fullText += text;
-      this.analyzeCurrentSentence(text).then(analysis => {
-        this.transcriptView.renderFinal(text, analysis);
-      });
-
+    const result = this.transcriptAnalysisFlow.handleResult(
+      { text, isFinal },
+      { fullText: this.fullText, sentences: this.sentences, stats: this.stats },
+    );
+    this.fullText = result.fullText;
+    this.sentences = result.sentences;
+    if (result.didFinalize) {
       this.requestRealtimeFeedback();
-      return;
     }
-    this.transcriptView.renderInterim(text);
-  }
-
-  // ===== 分析 =====
-
-  async analyzeCurrentSentence(text) {
-    const analysis = await window.api.analyzeText(text);
-    if (analysis) {
-      applyAnalysisToStats(this.stats, analysis);
-      this.updateStatsDisplay();
-      buildAnalysisFeedbackItems(analysis).forEach(item => {
-        this.feedbackView.add(item.text, item.type);
-      });
-    }
-    return analysis;
   }
 
   updateStatsDisplay() {
