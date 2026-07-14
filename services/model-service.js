@@ -11,9 +11,9 @@ const {
 const MODEL_DOWNLOAD_URL =
   'https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2';
 
-function getModelCandidates() {
+function getModelCandidates(userDataPath = app.getPath('userData')) {
   return [
-    path.join(getExternalModelsDir(app.getPath('userData')), MODEL_SUBDIR),
+    path.join(getExternalModelsDir(userDataPath), MODEL_SUBDIR),
     path.join(getBundledDevModelsDir(), MODEL_SUBDIR),
   ];
 }
@@ -22,8 +22,8 @@ function getMissingFiles(modelDir) {
   return REQUIRED_MODEL_FILES.filter(file => !fs.existsSync(path.join(modelDir, file)));
 }
 
-function getModelStatus() {
-  const candidates = getModelCandidates().map(dir => ({
+function getModelStatus(userDataPath) {
+  const candidates = getModelCandidates(userDataPath).map(dir => ({
     dir,
     missingFiles: getMissingFiles(dir),
   }));
@@ -49,6 +49,8 @@ async function openExternalModelsDir() {
 
 module.exports = {
   MODEL_DOWNLOAD_URL,
+  getMissingFiles,
+  getModelCandidates,
   getModelStatus,
   openExternalModelsDir,
 };
