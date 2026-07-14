@@ -21,6 +21,7 @@ const { ModelStatusView } = window.OmeletModelStatusView;
 const { TrainingControlsView } = window.OmeletTrainingControlsView;
 const { PasteModalView } = window.OmeletPasteModalView;
 const { StatsView } = window.OmeletStatsView;
+const { AudioRecorder } = window.OmeletAudioRecorder;
 
 class ExpressionTrainer {
   constructor() {
@@ -35,6 +36,10 @@ class ExpressionTrainer {
     this.stats = createEmptyStats();
     this.lastFeedbackText = '';
     this.lastReport = '';
+    this.audioRecorder = new AudioRecorder({
+      feedAudio: samples => window.api.feedAudio(samples),
+      onResult: result => this.handleASRResult(result),
+    });
 
     this.initElements();
     this.bindEvents();
@@ -160,19 +165,7 @@ class ExpressionTrainer {
     }
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      this.audioContext = new AudioContext({ sampleRate: 16000 });
-      const source = this.audioContext.createMediaStreamSource(stream);
-      this.audioProcessor = this.audioContext.createScriptProcessor(4096, 1, 1);
-      this.audioProcessor.onaudioprocess = async (e) => {
-        if (!this.isRecording || this.isPaused) return;
-        const samples = e.inputBuffer.getChannelData(0);
-        const result = await window.api.feedAudio(samples);
-        if (result) this.handleASRResult(result);
-      };
-      source.connect(this.audioProcessor);
-      this.audioProcessor.connect(this.audioContext.destination);
-      this.mediaStream = stream;
+      await this.audioRecorder.start();
     } catch (err) {
       this.showError(`麦克风访问失败: ${err.message}`);
       return;
@@ -194,21 +187,21 @@ class ExpressionTrainer {
 
   pauseRecording() {
     this.isPaused = true;
+    this.audioRecorder.pause();
     this.pauseStart = Date.now();
     this.controlsView.showPaused();
   }
 
   resumeRecording() {
     this.isPaused = false;
+    this.audioRecorder.resume();
     this.pausedTime += Date.now() - this.pauseStart;
     this.pauseStart = null;
     this.controlsView.showResumed();
   }
 
   async stopRecording() {
-    if (this.audioProcessor) { this.audioProcessor.disconnect(); this.audioProcessor = null; }
-    if (this.audioContext) { this.audioContext.close(); this.audioContext = null; }
-    if (this.mediaStream) { this.mediaStream.getTracks().forEach(t => t.stop()); this.mediaStream = null; }
+    await this.audioRecorder.stop();
 
     const stopResult = await window.api.stopASR();
     if (stopResult && stopResult.finalText) {
