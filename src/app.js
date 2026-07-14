@@ -19,6 +19,7 @@ const { FeedbackView } = window.OmeletFeedbackView;
 const { ReportView } = window.OmeletReportView;
 const { ModelStatusView } = window.OmeletModelStatusView;
 const { TrainingControlsView } = window.OmeletTrainingControlsView;
+const { PasteModalView } = window.OmeletPasteModalView;
 
 class ExpressionTrainer {
   constructor() {
@@ -55,6 +56,13 @@ class ExpressionTrainer {
     this.btnCopyReport = document.getElementById('btn-copy-report');
     this.pasteModal = document.getElementById('paste-modal');
     this.pasteTextarea = document.getElementById('paste-textarea');
+    this.pasteModalView = new PasteModalView({
+      modalEl: this.pasteModal,
+      textareaEl: this.pasteTextarea,
+      closeButtonEl: this.btnClosePaste,
+      analyzeButtonEl: this.btnAnalyzePaste,
+      onAnalyze: () => this.analyzePastedText(),
+    });
     this.timer = document.getElementById('timer');
     this.controlsView = new TrainingControlsView({
       startButtonEl: this.btnStart,
@@ -119,8 +127,7 @@ class ExpressionTrainer {
     this.btnSettings.addEventListener('click', () => window.api.openSettings());
     document.getElementById('btn-prompt-editor').addEventListener('click', () => window.api.openPromptEditor());
     this.reportView.bind();
-    this.btnClosePaste.addEventListener('click', () => this.pasteModal.classList.add('hidden'));
-    this.btnAnalyzePaste.addEventListener('click', () => this.analyzePastedText());
+    this.pasteModalView.bind();
     this.btnCopyText.addEventListener('click', () => this.copyOriginalText());
     this.btnSaveText.addEventListener('click', () => this.saveOriginalText());
     this.btnClear.addEventListener('click', () => this.clearAll());
@@ -364,16 +371,14 @@ class ExpressionTrainer {
   // ===== 粘贴逐字稿分析 =====
 
   openPasteModal() {
-    this.pasteTextarea.value = '';
-    this.pasteModal.classList.remove('hidden');
-    this.pasteTextarea.focus();
+    this.pasteModalView.open();
   }
 
   async analyzePastedText() {
-    const text = this.pasteTextarea.value.trim();
+    const text = this.pasteModalView.getText();
     if (!text) return;
 
-    this.pasteModal.classList.add('hidden');
+    this.pasteModalView.close();
     this.transcriptView.clear();
     this.fullText = text;
     this.resetStats();
