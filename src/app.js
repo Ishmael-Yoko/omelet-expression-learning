@@ -263,16 +263,16 @@ class ExpressionTrainer {
       if (analysis.vagueWords && analysis.vagueWords.length > 0) {
         analysis.vagueWords.forEach(item => {
           const alts = item.alternatives.slice(0, 3).join(' / ');
-          this.addFeedbackItem(`「${item.word}」→ ${alts}`, 'vague');
+          this.addFeedbackItem(`「${item.word}」 -> ${alts}`, 'vague');
         });
       }
       if (analysis.fillers && analysis.fillers.length >= 2) {
         const uniqueFillers = [...new Set(analysis.fillers.map(f => f.word))].slice(0, 3);
-        this.addFeedbackItem(`填充词：${uniqueFillers.join('、')}——试试停顿`, 'filler');
+        this.addFeedbackItem(`填充词：${uniqueFillers.join('、')} - 试试停顿`, 'filler');
       }
       if (analysis.hedges && analysis.hedges.length >= 1) {
         const uniqueHedges = [...new Set(analysis.hedges.map(h => h.word))].slice(0, 2);
-        this.addFeedbackItem(`「${uniqueHedges.join('」「')}」→ 直接说`, 'hedge');
+        this.addFeedbackItem(`「${uniqueHedges.join('」「')}」 -> 直接说`, 'hedge');
       }
     }
   }
@@ -307,7 +307,7 @@ class ExpressionTrainer {
     if (fillerKeywords.some(w => text.includes(`「${w}」`))) return 'filler';
     const hedgeKeywords = ['可能','也许','大概','应该','我觉得','好像','似乎','感觉','或许'];
     if (hedgeKeywords.some(w => text.includes(`「${w}」`))) return 'hedge';
-    if (text.includes('→')) return 'vague';
+    if (text.includes('->')) return 'vague';
     return 'ai';
   }
 
@@ -347,7 +347,7 @@ class ExpressionTrainer {
     const safeHtml = window.api.renderMarkdown(report);
     this.reportBody.innerHTML = `
       <div style="text-align:right;margin-bottom:12px;">
-        <button id="btn-save-report" style="background:#E5007E;color:#fff;border:none;border-radius:6px;padding:8px 14px;font-size:12px;cursor:pointer;">保存为 Markdown</button>
+        <button id="btn-save-report" class="btn-sm btn-save-report">保存为 Markdown</button>
       </div>
       ${safeHtml}
     `;
@@ -369,7 +369,7 @@ class ExpressionTrainer {
         const btn = document.getElementById('btn-save-report');
         btn.textContent = '✓ 已保存';
         btn.style.background = '#333';
-        setTimeout(() => { btn.textContent = '保存为 Markdown'; btn.style.background = '#E5007E'; }, 2000);
+        setTimeout(() => { btn.textContent = '保存为 Markdown'; btn.style.background = ''; }, 2000);
       }
     } catch (e) {
       alert('保存失败: ' + e.message);
