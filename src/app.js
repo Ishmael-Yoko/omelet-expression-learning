@@ -17,6 +17,7 @@ const {
 const { TranscriptView } = window.OmeletTranscriptView;
 const { FeedbackView } = window.OmeletFeedbackView;
 const { ReportView } = window.OmeletReportView;
+const { ModelStatusView } = window.OmeletModelStatusView;
 
 class ExpressionTrainer {
   constructor() {
@@ -84,6 +85,16 @@ class ExpressionTrainer {
     this.btnOpenModelsDir = document.getElementById('btn-open-models-dir');
     this.btnRefreshModelStatus = document.getElementById('btn-refresh-model-status');
     this.modelDownloadLink = document.getElementById('model-download-link');
+    this.modelStatusView = new ModelStatusView({
+      statusEl: this.modelStatus,
+      textEl: this.modelStatusText,
+      actionsEl: this.modelStatusActions,
+      downloadLinkEl: this.modelDownloadLink,
+      openButtonEl: this.btnOpenModelsDir,
+      refreshButtonEl: this.btnRefreshModelStatus,
+      onOpenModelsDir: () => window.api.openModelsDir(),
+      onRefresh: () => this.refreshModelStatus(),
+    });
   }
 
   bindEvents() {
@@ -101,28 +112,16 @@ class ExpressionTrainer {
     this.btnCopyText.addEventListener('click', () => this.copyOriginalText());
     this.btnSaveText.addEventListener('click', () => this.saveOriginalText());
     this.btnClear.addEventListener('click', () => this.clearAll());
-    this.btnOpenModelsDir.addEventListener('click', () => window.api.openModelsDir());
-    this.btnRefreshModelStatus.addEventListener('click', () => this.refreshModelStatus());
+    this.modelStatusView.bind();
     this.refreshModelStatus();
   }
 
   // ===== 录制控制 =====
 
   async refreshModelStatus() {
+    this.modelStatusView.renderChecking();
     const status = await window.api.getModelStatus();
-    this.modelStatus.classList.remove('model-status-checking');
-    this.modelStatus.classList.toggle('model-status-ok', status.ok);
-    this.modelStatus.classList.toggle('model-status-missing', !status.ok);
-    this.modelStatusActions.classList.toggle('hidden', status.ok);
-    this.modelDownloadLink.href = status.downloadUrl;
-
-    if (status.ok) {
-      this.modelStatusText.textContent = `语音模型已就绪：${status.activeDir}`;
-      return;
-    }
-
-    const missing = status.candidates[0].missingFiles.join('、');
-    this.modelStatusText.textContent = `语音模型未就绪，请将模型放到：${status.externalDir}。缺少：${missing}`;
+    this.modelStatusView.render(status);
   }
 
   async startRecording() {
