@@ -15,6 +15,7 @@ const {
   splitTranscriptSentences,
 } = window.OmeletAppUtils;
 const { TranscriptView } = window.OmeletTranscriptView;
+const { FeedbackView } = window.OmeletFeedbackView;
 
 class ExpressionTrainer {
   constructor() {
@@ -60,6 +61,7 @@ class ExpressionTrainer {
       renderHighlightedText,
     });
     this.feedbackContent = document.getElementById('feedback-content');
+    this.feedbackView = new FeedbackView({ containerEl: this.feedbackContent });
     this.reportModal = document.getElementById('report-modal');
     this.reportBody = document.getElementById('report-body');
     this.statFillers = document.getElementById('stat-fillers');
@@ -240,16 +242,16 @@ class ExpressionTrainer {
       if (analysis.vagueWords && analysis.vagueWords.length > 0) {
         analysis.vagueWords.forEach(item => {
           const alts = item.alternatives.slice(0, 3).join(' / ');
-          this.addFeedbackItem(`「${item.word}」 -> ${alts}`, 'vague');
+          this.feedbackView.add(`「${item.word}」 -> ${alts}`, 'vague');
         });
       }
       if (analysis.fillers && analysis.fillers.length >= 2) {
         const uniqueFillers = [...new Set(analysis.fillers.map(f => f.word))].slice(0, 3);
-        this.addFeedbackItem(`填充词：${uniqueFillers.join('、')} - 试试停顿`, 'filler');
+        this.feedbackView.add(`填充词：${uniqueFillers.join('、')} - 试试停顿`, 'filler');
       }
       if (analysis.hedges && analysis.hedges.length >= 1) {
         const uniqueHedges = [...new Set(analysis.hedges.map(h => h.word))].slice(0, 2);
-        this.addFeedbackItem(`「${uniqueHedges.join('」「')}」 -> 直接说`, 'hedge');
+        this.feedbackView.add(`「${uniqueHedges.join('」「')}」 -> 直接说`, 'hedge');
       }
     }
     return analysis;
@@ -270,32 +272,8 @@ class ExpressionTrainer {
     if (result.success && result.feedback) {
       const lines = result.feedback.split('\n').filter(l => l.trim());
       lines.forEach(line => {
-        const type = this.classifyFeedback(line.trim());
-        this.addFeedbackItem(line.trim(), type);
+        this.feedbackView.add(line.trim());
       });
-    }
-  }
-
-  classifyFeedback(text) {
-    if (text === '✓' || text.includes('✓')) return 'good';
-    const fillerKeywords = ['嗯','啊','呃','那个','就是','然后','这个','对吧','是吧','反正','基本上','所以说'];
-    if (fillerKeywords.some(w => text.includes(`「${w}」`))) return 'filler';
-    const hedgeKeywords = ['可能','也许','大概','应该','我觉得','好像','似乎','感觉','或许'];
-    if (hedgeKeywords.some(w => text.includes(`「${w}」`))) return 'hedge';
-    if (text.includes('->')) return 'vague';
-    return 'ai';
-  }
-
-  addFeedbackItem(text, type = 'ai') {
-    const existing = Array.from(this.feedbackContent.children).slice(0, 3);
-    if (existing.some(el => el.textContent === text)) return;
-
-    const item = document.createElement('div');
-    item.className = `feedback-item type-${type}`;
-    item.textContent = text;
-    this.feedbackContent.insertBefore(item, this.feedbackContent.firstChild);
-    while (this.feedbackContent.children.length > 12) {
-      this.feedbackContent.removeChild(this.feedbackContent.lastChild);
     }
   }
 
@@ -364,7 +342,7 @@ class ExpressionTrainer {
   resetStats() {
     this.stats = createEmptyStats();
     this.updateStatsDisplay();
-    this.feedbackContent.innerHTML = '';
+    this.feedbackView.clear();
   }
 
   showError(msg) {
@@ -403,7 +381,6 @@ class ExpressionTrainer {
     this.sentences = [];
     this.lastReport = '';
     this.transcriptView.resetHint();
-    this.feedbackContent.innerHTML = '';
     this.resetStats();
     this.timer.textContent = '00:00';
     this.timer.classList.remove('active');
