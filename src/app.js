@@ -2,15 +2,10 @@
 
 const {
   applyAnalysisToStats,
-  buildOriginalTextFilename,
-  buildOriginalTextMarkdown,
-  buildReportFilename,
-  buildReportMarkdown,
   calculateExpressionDensity,
   createEmptyStats,
   formatTimer,
   getElapsedSeconds,
-  getExportTimestamp,
   renderHighlightedText,
   splitTranscriptSentences,
 } = window.OmeletAppUtils;
@@ -22,6 +17,7 @@ const { TrainingControlsView } = window.OmeletTrainingControlsView;
 const { PasteModalView } = window.OmeletPasteModalView;
 const { StatsView } = window.OmeletStatsView;
 const { AudioRecorder } = window.OmeletAudioRecorder;
+const { ExportActions } = window.OmeletExportActions;
 
 class ExpressionTrainer {
   constructor() {
@@ -39,6 +35,11 @@ class ExpressionTrainer {
     this.audioRecorder = new AudioRecorder({
       feedAudio: samples => window.api.feedAudio(samples),
       onResult: result => this.handleASRResult(result),
+    });
+    this.exportActions = new ExportActions({
+      ...window.OmeletAppUtils,
+      saveFile: (content, filename) => window.api.saveFile(content, filename),
+      writeClipboard: text => navigator.clipboard.writeText(text),
     });
 
     this.initElements();
@@ -295,18 +296,12 @@ class ExpressionTrainer {
   }
 
   async saveReport() {
-    if (!this.lastReport) return;
-    const { dateStr, timeStr } = getExportTimestamp();
-    const markdown = buildReportMarkdown({
-      dateStr,
-      stats: this.stats,
-      fullText: this.fullText,
-      report: this.lastReport,
-    });
-    const filename = buildReportFilename({ dateStr, timeStr });
-
     try {
-      const result = await window.api.saveFile(markdown, filename);
+      const result = await this.exportActions.saveReport({
+        report: this.lastReport,
+        stats: this.stats,
+        fullText: this.fullText,
+      });
       if (result.success) {
         this.reportView.markSaved();
       }
@@ -335,20 +330,15 @@ class ExpressionTrainer {
   // ===== 复制 & 保存原文 & 清空 =====
 
   copyOriginalText() {
-    if (!this.fullText.trim()) return;
-    navigator.clipboard.writeText(this.fullText).then(() => {
+    this.exportActions.copyOriginalText(this.fullText).then(result => {
+      if (!result.success) return;
       this.controlsView.markCopied();
     });
   }
 
   async saveOriginalText() {
-    if (!this.fullText.trim()) return;
-    const { dateStr, timeStr } = getExportTimestamp();
-    const markdown = buildOriginalTextMarkdown({ dateStr, fullText: this.fullText });
-    const filename = buildOriginalTextFilename({ dateStr, timeStr });
-
     try {
-      const result = await window.api.saveFile(markdown, filename);
+      const result = await this.exportActions.saveOriginalText(this.fullText);
       if (result.success) {
         this.controlsView.markSaved();
       }
