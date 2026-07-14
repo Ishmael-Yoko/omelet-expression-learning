@@ -14,8 +14,32 @@ function fail(error, code = 'IPC_ERROR', details = null) {
   };
 }
 
+function isCanonicalResult(result) {
+  return Boolean(
+    result
+      && typeof result === 'object'
+      && typeof result.ok === 'boolean'
+      && (Object.hasOwn(result, 'data') || Object.hasOwn(result, 'error')),
+  );
+}
+
+function unwrapResult(result) {
+  if (!isCanonicalResult(result)) {
+    return result;
+  }
+
+  if (result.ok) {
+    return result.data;
+  }
+
+  const error = new Error(result.error?.message || 'Unknown error');
+  error.code = result.error?.code || 'IPC_ERROR';
+  error.details = result.error?.details || null;
+  throw error;
+}
+
 function toLegacyResult(result, dataMapper = data => data) {
-  if (!result || typeof result !== 'object' || typeof result.ok !== 'boolean') {
+  if (!isCanonicalResult(result)) {
     return result;
   }
 
@@ -37,5 +61,7 @@ function toLegacyResult(result, dataMapper = data => data) {
 module.exports = {
   ok,
   fail,
+  isCanonicalResult,
+  unwrapResult,
   toLegacyResult,
 };

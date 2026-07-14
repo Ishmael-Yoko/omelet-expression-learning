@@ -1,6 +1,12 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { fail, ok, toLegacyResult } = require('../main/ipc-result');
+const {
+  fail,
+  isCanonicalResult,
+  ok,
+  toLegacyResult,
+  unwrapResult,
+} = require('../main/ipc-result');
 
 test('ok wraps IPC data in the canonical result shape', () => {
   assert.deepEqual(ok({ value: 1 }), {
@@ -41,4 +47,27 @@ test('toLegacyResult passes through non-canonical results', () => {
   const raw = { ok: 'not boolean' };
   assert.equal(toLegacyResult(null), null);
   assert.equal(toLegacyResult(raw), raw);
+});
+
+test('canonical detection requires a data or error envelope', () => {
+  const modelStatus = { ok: false, activeDir: null };
+  assert.equal(isCanonicalResult(ok(modelStatus)), true);
+  assert.equal(isCanonicalResult(modelStatus), false);
+});
+
+test('unwrapResult returns canonical data without changing business fields', () => {
+  const modelStatus = { ok: false, activeDir: null };
+  assert.deepEqual(unwrapResult(ok(modelStatus)), modelStatus);
+  assert.equal(unwrapResult(modelStatus), modelStatus);
+});
+
+test('unwrapResult throws canonical errors with the IPC code attached', () => {
+  assert.throws(
+    () => unwrapResult(fail('load failed', 'SETTINGS_LOAD_FAILED')),
+    (error) => {
+      assert.equal(error.message, 'load failed');
+      assert.equal(error.code, 'SETTINGS_LOAD_FAILED');
+      return true;
+    },
+  );
 });

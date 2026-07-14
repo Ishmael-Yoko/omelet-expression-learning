@@ -19,7 +19,13 @@ function registerIpcHandlers({
   onAsrReadyChange,
   isAsrReady,
 }) {
-  ipcMain.handle('get-settings', () => loadSettingsForDisplay());
+  ipcMain.handle('get-settings', () => {
+    try {
+      return ok(loadSettingsForDisplay());
+    } catch (error) {
+      return fail(error, 'SETTINGS_LOAD_FAILED');
+    }
+  });
 
   ipcMain.handle('save-settings', (_event, settings) => {
     try {
@@ -40,7 +46,13 @@ function registerIpcHandlers({
     return ok();
   });
 
-  ipcMain.handle('get-custom-prompt', () => loadCustomPrompt());
+  ipcMain.handle('get-custom-prompt', () => {
+    try {
+      return ok(loadCustomPrompt());
+    } catch (error) {
+      return fail(error, 'PROMPT_LOAD_FAILED');
+    }
+  });
 
   ipcMain.handle('save-custom-prompt', (_event, data) => {
     try {
@@ -59,7 +71,13 @@ function registerIpcHandlers({
     return ok();
   });
 
-  ipcMain.handle('get-model-status', () => getModelStatus());
+  ipcMain.handle('get-model-status', () => {
+    try {
+      return ok(getModelStatus());
+    } catch (error) {
+      return fail(error, 'MODEL_STATUS_FAILED');
+    }
+  });
 
   ipcMain.handle('open-models-dir', async () => {
     try {
@@ -82,9 +100,14 @@ function registerIpcHandlers({
 
   ipcMain.handle('feed-audio', (_event, samplesArray) => {
     if (!isAsrReady()) {
-      return null;
+      return ok(null);
     }
-    return feedAudio(new Float32Array(samplesArray));
+
+    try {
+      return ok(feedAudio(new Float32Array(samplesArray)));
+    } catch (error) {
+      return fail(error, 'ASR_FEED_FAILED');
+    }
   });
 
   ipcMain.handle('stop-asr', () => {
@@ -93,10 +116,24 @@ function registerIpcHandlers({
     return ok({ finalText });
   });
 
-  ipcMain.handle('analyze-text', (_event, text) => analyzeText(text));
+  ipcMain.handle('analyze-text', (_event, text) => {
+    try {
+      return ok(analyzeText(text));
+    } catch (error) {
+      return fail(error, 'TEXT_ANALYSIS_FAILED');
+    }
+  });
 
   ipcMain.handle('save-file', async (_event, content, filename) => {
-    return saveMarkdownFile(getMainWindow(), content, filename);
+    try {
+      const result = await saveMarkdownFile(getMainWindow(), content, filename);
+      if (!result.success) {
+        return fail('Save cancelled', 'FILE_SAVE_CANCELLED');
+      }
+      return ok({ path: result.path });
+    } catch (error) {
+      return fail(error, 'FILE_SAVE_FAILED');
+    }
   });
 
   ipcMain.handle('get-realtime-feedback', async (_event, text) => {
