@@ -10,6 +10,7 @@ const {
 const { loadCustomPrompt, saveCustomPrompt } = require('../services/prompt-service');
 const { saveMarkdownFile } = require('../services/file-service');
 const { getModelStatus, openExternalModelsDir } = require('../services/model-service');
+const { fail, ok } = require('./ipc-result');
 
 function registerIpcHandlers({
   getMainWindow,
@@ -21,25 +22,33 @@ function registerIpcHandlers({
   ipcMain.handle('get-settings', () => loadSettingsForDisplay());
 
   ipcMain.handle('save-settings', (_event, settings) => {
-    saveSettings(settings);
-    return { success: true };
+    try {
+      saveSettings(settings);
+      return ok();
+    } catch (error) {
+      return fail(error, 'SETTINGS_SAVE_FAILED');
+    }
   });
 
   ipcMain.handle('open-settings', () => {
     openSettingsWindow();
-    return { success: true };
+    return ok();
   });
 
   ipcMain.handle('open-prompt-editor', () => {
     openPromptEditorWindow();
-    return { success: true };
+    return ok();
   });
 
   ipcMain.handle('get-custom-prompt', () => loadCustomPrompt());
 
   ipcMain.handle('save-custom-prompt', (_event, data) => {
-    saveCustomPrompt(data);
-    return { success: true };
+    try {
+      saveCustomPrompt(data);
+      return ok();
+    } catch (error) {
+      return fail(error, 'PROMPT_SAVE_FAILED');
+    }
   });
 
   ipcMain.handle('close-current-window', (event) => {
@@ -47,23 +56,27 @@ function registerIpcHandlers({
     if (win) {
       win.close();
     }
-    return { success: true };
+    return ok();
   });
 
   ipcMain.handle('get-model-status', () => getModelStatus());
 
   ipcMain.handle('open-models-dir', async () => {
-    const dir = await openExternalModelsDir();
-    return { success: true, dir };
+    try {
+      const dir = await openExternalModelsDir();
+      return ok({ dir });
+    } catch (error) {
+      return fail(error, 'MODEL_DIR_OPEN_FAILED');
+    }
   });
 
   ipcMain.handle('init-asr', async () => {
     try {
       await initASR();
       onAsrReadyChange(true);
-      return { success: true };
+      return ok();
     } catch (error) {
-      return { success: false, error: error.message };
+      return fail(error, 'ASR_INIT_FAILED');
     }
   });
 
@@ -77,7 +90,7 @@ function registerIpcHandlers({
   ipcMain.handle('stop-asr', () => {
     const finalText = stopRecognition();
     onAsrReadyChange(false);
-    return { success: true, finalText };
+    return ok({ finalText });
   });
 
   ipcMain.handle('analyze-text', (_event, text) => analyzeText(text));
@@ -91,9 +104,9 @@ function registerIpcHandlers({
     const customPrompt = loadCustomPrompt();
     try {
       const feedback = await sendFeedback(text, settings, customPrompt);
-      return { success: true, feedback };
+      return ok({ feedback });
     } catch (error) {
-      return { success: false, error: error.message };
+      return fail(error, 'AI_FEEDBACK_FAILED');
     }
   });
 
@@ -102,9 +115,9 @@ function registerIpcHandlers({
     const customPrompt = loadCustomPrompt();
     try {
       const report = await sendReport(fullText, stats, settings, customPrompt);
-      return { success: true, report };
+      return ok({ report });
     } catch (error) {
-      return { success: false, error: error.message };
+      return fail(error, 'AI_REPORT_FAILED');
     }
   });
 }
