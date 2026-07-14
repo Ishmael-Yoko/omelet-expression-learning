@@ -9,11 +9,13 @@ class SettingsPage {
     this.customEndpointInput = document.getElementById('custom-endpoint');
     this.customModelInput = document.getElementById('custom-model');
     this.btnSave = document.getElementById('btn-save');
+    this.btnClearApiKey = document.getElementById('btn-clear-apikey');
     this.saveSuccess = document.getElementById('save-success');
     this.groupApikey = document.getElementById('group-apikey');
     this.groupOllama = document.getElementById('group-ollama');
     this.groupCustom = document.getElementById('group-custom');
     this.groupCustomModel = document.getElementById('group-custom-model');
+    this.clearApiKey = false;
 
     this.bindEvents();
     this.loadSettings();
@@ -22,6 +24,7 @@ class SettingsPage {
   bindEvents() {
     this.providerSelect.addEventListener('change', () => this.onProviderChange());
     this.btnSave.addEventListener('click', () => this.save());
+    this.btnClearApiKey.addEventListener('click', () => this.clearApiKeyInput());
   }
 
   async loadSettings() {
@@ -29,6 +32,7 @@ class SettingsPage {
 
     this.providerSelect.value = settings.provider || 'deepseek';
     this.apikeyInput.value = settings.apiKey || '';
+    this.clearApiKey = false;
     this.ollamaUrlInput.value = settings.ollamaUrl || 'http://localhost:11434';
     this.customEndpointInput.value = settings.customEndpoint || '';
     this.customModelInput.value = settings.customModel || '';
@@ -38,6 +42,12 @@ class SettingsPage {
     if (settings.model) {
       this.modelSelect.value = settings.model;
     }
+  }
+
+  clearApiKeyInput() {
+    this.apikeyInput.value = '';
+    this.apikeyInput.placeholder = '保存后将清空已保存的 API Key';
+    this.clearApiKey = true;
   }
 
   onProviderChange() {
@@ -73,6 +83,7 @@ class SettingsPage {
       ollamaUrl: this.ollamaUrlInput.value.trim(),
       customEndpoint: this.customEndpointInput.value.trim(),
       customModel: this.customModelInput.value.trim(),
+      clearApiKey: this.clearApiKey,
     };
 
     await window.api.saveSettings(settings);

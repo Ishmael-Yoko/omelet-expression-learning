@@ -4,12 +4,12 @@ const { app } = require('electron');
 const { DEFAULT_SETTINGS } = require('../config/settings-defaults');
 const { decryptSecret, encryptSecret, maskSecret } = require('./secure-settings-service');
 
-function getSettingsPath() {
-  return path.join(app.getPath('userData'), 'settings.json');
+function getSettingsPath(userDataPath = app.getPath('userData')) {
+  return path.join(userDataPath, 'settings.json');
 }
 
-function readSettingsFile() {
-  const settingsPath = getSettingsPath();
+function readSettingsFile(options = {}) {
+  const settingsPath = options.settingsPath || getSettingsPath(options.userDataPath);
   if (!fs.existsSync(settingsPath)) {
     return { ...DEFAULT_SETTINGS };
   }
@@ -22,36 +22,46 @@ function readSettingsFile() {
   }
 }
 
-function loadSettings() {
-  const settings = readSettingsFile();
-  const apiKey = decryptSecret(settings.apiKey);
+function loadSettings(options = {}) {
+  const settings = readSettingsFile(options);
+  const decrypt = options.decryptSecret || decryptSecret;
+  const apiKey = decrypt(settings.apiKey);
   return { ...settings, apiKey };
 }
 
-function loadSettingsForDisplay() {
-  const settings = readSettingsFile();
-  const apiKey = decryptSecret(settings.apiKey);
+function loadSettingsForDisplay(options = {}) {
+  const settings = readSettingsFile(options);
+  const decrypt = options.decryptSecret || decryptSecret;
+  const mask = options.maskSecret || maskSecret;
+  const apiKey = decrypt(settings.apiKey);
   return {
     ...settings,
-    apiKey: maskSecret(apiKey),
+    apiKey: mask(apiKey),
     hasApiKey: Boolean(apiKey),
   };
 }
 
-function saveSettings(settings) {
+function saveSettings(settings, options = {}) {
+  const settingsPath = options.settingsPath || getSettingsPath(options.userDataPath);
+  const encrypt = options.encryptSecret || encryptSecret;
   const nextSettings = { ...settings };
-  if (settings.apiKey && !settings.apiKey.startsWith('****')) {
-    nextSettings.apiKey = encryptSecret(settings.apiKey);
+
+  if (settings.clearApiKey) {
+    nextSettings.apiKey = '';
+    delete nextSettings.clearApiKey;
+  } else if (settings.apiKey && !settings.apiKey.startsWith('****')) {
+    nextSettings.apiKey = encrypt(settings.apiKey);
   } else {
-    const current = readSettingsFile();
+    const current = readSettingsFile({ settingsPath });
     nextSettings.apiKey = current.apiKey || '';
   }
 
-  fs.writeFileSync(getSettingsPath(), JSON.stringify(nextSettings, null, 2));
+  fs.writeFileSync(settingsPath, JSON.stringify(nextSettings, null, 2));
 }
 
 module.exports = {
   getSettingsPath,
+  readSettingsFile,
   loadSettings,
   loadSettingsForDisplay,
   saveSettings,

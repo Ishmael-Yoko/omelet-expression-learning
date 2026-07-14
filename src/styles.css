@@ -732,6 +732,12 @@ a {
   padding: 9px 12px;
 }
 
+.input-action-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
 .utility-card textarea {
   min-height: 126px;
   padding: 13px 14px;
