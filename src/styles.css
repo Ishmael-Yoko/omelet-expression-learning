@@ -303,6 +303,27 @@ a {
   background: var(--brand-accent-soft);
 }
 
+.btn-save-report.is-saved {
+  color: var(--text-primary);
+  border-color: var(--border-subtle);
+  background: var(--surface-raised);
+}
+
+.report-actions {
+  text-align: right;
+  margin-bottom: 12px;
+}
+
+.report-status {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 40px;
+}
+
+.report-error {
+  color: var(--vague-word);
+}
+
 .btn-sm:active,
 .btn-icon:active,
 .btn-main:active,

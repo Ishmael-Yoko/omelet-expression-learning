@@ -16,6 +16,7 @@ const {
 } = window.OmeletAppUtils;
 const { TranscriptView } = window.OmeletTranscriptView;
 const { FeedbackView } = window.OmeletFeedbackView;
+const { ReportView } = window.OmeletReportView;
 
 class ExpressionTrainer {
   constructor() {
@@ -64,6 +65,15 @@ class ExpressionTrainer {
     this.feedbackView = new FeedbackView({ containerEl: this.feedbackContent });
     this.reportModal = document.getElementById('report-modal');
     this.reportBody = document.getElementById('report-body');
+    this.reportView = new ReportView({
+      modalEl: this.reportModal,
+      bodyEl: this.reportBody,
+      closeButtonEl: this.btnCloseReport,
+      copyButtonEl: this.btnCopyReport,
+      renderMarkdown: window.api.renderMarkdown,
+      copyText: (text) => navigator.clipboard.writeText(text),
+      onSave: () => this.saveReport(),
+    });
     this.statFillers = document.getElementById('stat-fillers');
     this.statHedges = document.getElementById('stat-hedges');
     this.statVague = document.getElementById('stat-vague');
@@ -85,14 +95,7 @@ class ExpressionTrainer {
     this.btnReport.addEventListener('click', () => this.generateReport());
     this.btnSettings.addEventListener('click', () => window.api.openSettings());
     document.getElementById('btn-prompt-editor').addEventListener('click', () => window.api.openPromptEditor());
-    this.btnCloseReport.addEventListener('click', () => this.reportModal.classList.add('hidden'));
-    this.btnCopyReport.addEventListener('click', () => {
-      const reportText = this.reportBody.innerText;
-      navigator.clipboard.writeText(reportText).then(() => {
-        this.btnCopyReport.textContent = '✓ 已复制';
-        setTimeout(() => { this.btnCopyReport.textContent = '复制全文'; }, 2000);
-      });
-    });
+    this.reportView.bind();
     this.btnClosePaste.addEventListener('click', () => this.pasteModal.classList.add('hidden'));
     this.btnAnalyzePaste.addEventListener('click', () => this.analyzePastedText());
     this.btnCopyText.addEventListener('click', () => this.copyOriginalText());
@@ -280,8 +283,7 @@ class ExpressionTrainer {
   // ===== 报告 =====
 
   async generateReport() {
-    this.reportBody.innerHTML = '<p style="text-align:center;color:#666;padding:40px;">正在生成报告...</p>';
-    this.reportModal.classList.remove('hidden');
+    this.reportView.openLoading();
 
     const result = await window.api.getFinalReport({
       fullText: this.fullText,
@@ -290,22 +292,10 @@ class ExpressionTrainer {
 
     if (result.success) {
       this.lastReport = result.report;
-      this.renderReport(result.report);
+      this.reportView.render(result.report);
     } else {
-      this.reportBody.innerHTML = `<p style="color:#ff6b6b;">生成失败: ${result.error}</p>`;
+      this.reportView.showError(result.error);
     }
-  }
-
-  renderReport(report) {
-    const safeHtml = window.api.renderMarkdown(report);
-    this.reportBody.innerHTML = `
-      <div style="text-align:right;margin-bottom:12px;">
-        <button id="btn-save-report" class="btn-sm btn-save-report">保存为 Markdown</button>
-      </div>
-      ${safeHtml}
-    `;
-
-    document.getElementById('btn-save-report').addEventListener('click', () => this.saveReport());
   }
 
   async saveReport() {
@@ -322,10 +312,7 @@ class ExpressionTrainer {
     try {
       const result = await window.api.saveFile(markdown, filename);
       if (result.success) {
-        const btn = document.getElementById('btn-save-report');
-        btn.textContent = '✓ 已保存';
-        btn.style.background = '#333';
-        setTimeout(() => { btn.textContent = '保存为 Markdown'; btn.style.background = ''; }, 2000);
+        this.reportView.markSaved();
       }
     } catch (e) {
       alert('保存失败: ' + e.message);
