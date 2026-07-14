@@ -19,6 +19,7 @@ const { StatsView } = window.OmeletStatsView;
 const { AudioRecorder } = window.OmeletAudioRecorder;
 const { ExportActions } = window.OmeletExportActions;
 const { buildAnalysisFeedbackItems } = window.OmeletAnalysisFeedbackRules;
+const { PasteAnalysisFlow } = window.OmeletPasteAnalysisFlow;
 
 class ExpressionTrainer {
   constructor() {
@@ -41,6 +42,12 @@ class ExpressionTrainer {
       ...window.OmeletAppUtils,
       saveFile: (content, filename) => window.api.saveFile(content, filename),
       writeClipboard: text => navigator.clipboard.writeText(text),
+    });
+    this.pasteAnalysisFlow = new PasteAnalysisFlow({
+      splitTranscriptSentences,
+      analyzeText: text => window.api.analyzeText(text),
+      applyAnalysisToStats,
+      renderSentence: (sentence, analysis) => this.transcriptView.renderSentence(sentence, analysis),
     });
 
     this.initElements();
@@ -361,18 +368,8 @@ class ExpressionTrainer {
     this.fullText = text;
     this.resetStats();
 
-    const sentences = splitTranscriptSentences(text);
-    this.sentences = sentences;
-
-    for (const sentence of sentences) {
-      const analysis = await window.api.analyzeText(sentence);
-      if (analysis) {
-        applyAnalysisToStats(this.stats, analysis);
-      }
-      this.transcriptView.renderSentence(sentence, analysis);
-    }
-
-    this.stats.duration = 0;
+    const result = await this.pasteAnalysisFlow.analyze({ text, stats: this.stats });
+    this.sentences = result.sentences;
     this.updateStatsDisplay();
 
     this.controlsView.showTextReady();
