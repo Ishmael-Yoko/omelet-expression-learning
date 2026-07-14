@@ -5,159 +5,59 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>omelet-表达训练系统 - 设置</title>
   <link rel="stylesheet" href="styles.css">
-  <style>
-    body {
-      background: #1a1a1a;
-      padding: 40px 32px 32px;
-      display: block;
-      overflow-y: auto;
-      -webkit-app-region: drag;
-    }
-
-    .settings-container {
-      -webkit-app-region: no-drag;
-    }
-
-    h1 {
-      font-size: 20px;
-      font-weight: 600;
-      margin-bottom: 24px;
-      color: #fff;
-    }
-
-    .form-group {
-      margin-bottom: 20px;
-    }
-
-    .form-group label {
-      display: block;
-      font-size: 13px;
-      color: #888;
-      margin-bottom: 6px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .form-group select,
-    .form-group input {
-      width: 100%;
-      padding: 10px 14px;
-      background: #2a2a2a;
-      border: 1px solid #444;
-      border-radius: 8px;
-      color: #fff;
-      font-size: 14px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-
-    .form-group select:focus,
-    .form-group input:focus {
-      border-color: #4dabf7;
-    }
-
-    .form-group input::placeholder {
-      color: #666;
-    }
-
-    .form-group .hint {
-      font-size: 12px;
-      color: #666;
-      margin-top: 4px;
-    }
-
-    .conditional {
-      display: none;
-    }
-
-    .conditional.visible {
-      display: block;
-    }
-
-    .btn-save {
-      width: 100%;
-      padding: 12px;
-      background: #4dabf7;
-      color: #000;
-      border: none;
-      border-radius: 8px;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      margin-top: 24px;
-      transition: background 0.2s;
-    }
-
-    .btn-save:hover {
-      background: #339af0;
-    }
-
-    .save-success {
-      text-align: center;
-      color: #69db7c;
-      font-size: 13px;
-      margin-top: 12px;
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
-
-    .save-success.show {
-      opacity: 1;
-    }
-
-    .model-presets {
-      font-size: 12px;
-      color: #666;
-      margin-top: 4px;
-    }
-  </style>
 </head>
-<body>
-  <div class="settings-container">
-    <h1>⚙️ 设置</h1>
+<body class="utility-page">
+  <main class="utility-container settings-container">
+    <header class="utility-header">
+      <div>
+        <span class="section-kicker">系统配置</span>
+        <h1>设置</h1>
+      </div>
+      <p>配置 AI 后端、模型名称和本地服务地址。API Key 会在主进程中加密保存。</p>
+    </header>
 
-    <div class="form-group">
-      <label>AI 后端</label>
-      <select id="provider">
-        <option value="openai">OpenAI</option>
-        <option value="deepseek">DeepSeek（推荐）</option>
-        <option value="ollama">Ollama（本地）</option>
-        <option value="custom">自定义 OpenAI 兼容</option>
-      </select>
-    </div>
+    <section class="utility-card">
+      <div class="form-group">
+        <label for="provider">AI 后端</label>
+        <select id="provider">
+          <option value="openai">OpenAI</option>
+          <option value="deepseek">DeepSeek（推荐）</option>
+          <option value="ollama">Ollama（本地）</option>
+          <option value="custom">自定义 OpenAI 兼容</option>
+        </select>
+      </div>
 
-    <div class="form-group conditional" id="group-apikey">
-      <label>API Key</label>
-      <input type="password" id="apikey" placeholder="输入你的 API Key">
-      <div class="hint" id="apikey-hint">在 platform.deepseek.com 获取</div>
-    </div>
+      <div class="form-group conditional" id="group-apikey">
+        <label for="apikey">API Key</label>
+        <input type="password" id="apikey" placeholder="输入你的 API Key">
+        <div class="hint" id="apikey-hint">在 platform.deepseek.com 获取</div>
+      </div>
 
-    <div class="form-group">
-      <label>模型</label>
-      <select id="model">
-        <!-- 动态填充 -->
-      </select>
-      <div class="model-presets" id="model-hint"></div>
-    </div>
+      <div class="form-group">
+        <label for="model">模型</label>
+        <select id="model"></select>
+        <div class="model-presets" id="model-hint"></div>
+      </div>
 
-    <div class="form-group conditional" id="group-ollama">
-      <label>Ollama 地址</label>
-      <input type="text" id="ollama-url" placeholder="http://localhost:11434">
-    </div>
+      <div class="form-group conditional" id="group-ollama">
+        <label for="ollama-url">Ollama 地址</label>
+        <input type="text" id="ollama-url" placeholder="http://localhost:11434">
+      </div>
 
-    <div class="form-group conditional" id="group-custom">
-      <label>自定义 Endpoint</label>
-      <input type="text" id="custom-endpoint" placeholder="https://api.example.com/v1">
-    </div>
+      <div class="form-group conditional" id="group-custom">
+        <label for="custom-endpoint">自定义 Endpoint</label>
+        <input type="text" id="custom-endpoint" placeholder="https://api.example.com/v1">
+      </div>
 
-    <div class="form-group conditional" id="group-custom-model">
-      <label>自定义模型名</label>
-      <input type="text" id="custom-model" placeholder="model-name">
-    </div>
+      <div class="form-group conditional" id="group-custom-model">
+        <label for="custom-model">自定义模型名</label>
+        <input type="text" id="custom-model" placeholder="model-name">
+      </div>
+    </section>
 
-    <button class="btn-save" id="btn-save">保存设置</button>
+    <button class="btn-main btn-page-primary" id="btn-save">保存设置</button>
     <div class="save-success" id="save-success">✓ 已保存</div>
-  </div>
+  </main>
 
   <script src="settings.js"></script>
 </body>
