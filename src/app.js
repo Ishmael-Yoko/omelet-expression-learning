@@ -18,6 +18,7 @@ const { PasteModalView } = window.OmeletPasteModalView;
 const { StatsView } = window.OmeletStatsView;
 const { AudioRecorder } = window.OmeletAudioRecorder;
 const { ExportActions } = window.OmeletExportActions;
+const { buildAnalysisFeedbackItems } = window.OmeletAnalysisFeedbackRules;
 
 class ExpressionTrainer {
   constructor() {
@@ -242,20 +243,9 @@ class ExpressionTrainer {
     if (analysis) {
       applyAnalysisToStats(this.stats, analysis);
       this.updateStatsDisplay();
-      if (analysis.vagueWords && analysis.vagueWords.length > 0) {
-        analysis.vagueWords.forEach(item => {
-          const alts = item.alternatives.slice(0, 3).join(' / ');
-          this.feedbackView.add(`「${item.word}」 -> ${alts}`, 'vague');
-        });
-      }
-      if (analysis.fillers && analysis.fillers.length >= 2) {
-        const uniqueFillers = [...new Set(analysis.fillers.map(f => f.word))].slice(0, 3);
-        this.feedbackView.add(`填充词：${uniqueFillers.join('、')} - 试试停顿`, 'filler');
-      }
-      if (analysis.hedges && analysis.hedges.length >= 1) {
-        const uniqueHedges = [...new Set(analysis.hedges.map(h => h.word))].slice(0, 2);
-        this.feedbackView.add(`「${uniqueHedges.join('」「')}」 -> 直接说`, 'hedge');
-      }
+      buildAnalysisFeedbackItems(analysis).forEach(item => {
+        this.feedbackView.add(item.text, item.type);
+      });
     }
     return analysis;
   }
