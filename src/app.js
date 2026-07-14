@@ -22,14 +22,10 @@ const { buildAnalysisFeedbackItems } = window.OmeletAnalysisFeedbackRules;
 const { PasteAnalysisFlow } = window.OmeletPasteAnalysisFlow;
 const { RealtimeFeedbackFlow } = window.OmeletRealtimeFeedbackFlow;
 const { FinalReportFlow } = window.OmeletFinalReportFlow;
+const { TrainingSessionFlow } = window.OmeletTrainingSessionFlow;
 
 class ExpressionTrainer {
   constructor() {
-    this.isRecording = false;
-    this.isPaused = false;
-    this.startTime = null;
-    this.pausedTime = 0;
-    this.pauseStart = null;
     this.timerInterval = null;
     this.fullText = '';
     this.sentences = [];
@@ -38,6 +34,12 @@ class ExpressionTrainer {
     this.audioRecorder = new AudioRecorder({
       feedAudio: samples => window.api.feedAudio(samples),
       onResult: result => this.handleASRResult(result),
+    });
+    this.trainingSessionFlow = new TrainingSessionFlow({
+      initASR: () => window.api.initASR(),
+      stopASR: () => window.api.stopASR(),
+      audioRecorder: this.audioRecorder,
+      getElapsedSeconds,
     });
     this.exportActions = new ExportActions({
       ...window.OmeletAppUtils,
@@ -177,24 +179,17 @@ class ExpressionTrainer {
   }
 
   async startRecording() {
-    const initResult = await window.api.initASR();
-    if (!initResult.success) {
+    const startResult = await this.trainingSessionFlow.start();
+    if (!startResult.success && startResult.stage === 'asr') {
       await this.refreshModelStatus();
-      this.showError(`语音识别启动失败: ${initResult.error}`);
+      this.showError(`语音识别启动失败: ${startResult.error}`);
+      return;
+    }
+    if (!startResult.success && startResult.stage === 'microphone') {
+      this.showError(`麦克风访问失败: ${startResult.error}`);
       return;
     }
 
-    try {
-      await this.audioRecorder.start();
-    } catch (err) {
-      this.showError(`麦克风访问失败: ${err.message}`);
-      return;
-    }
-
-    this.isRecording = true;
-    this.isPaused = false;
-    this.startTime = Date.now();
-    this.pausedTime = 0;
     this.fullText = '';
     this.sentences = [];
     this.realtimeFeedbackFlow.reset();
@@ -207,32 +202,23 @@ class ExpressionTrainer {
   }
 
   pauseRecording() {
-    this.isPaused = true;
-    this.audioRecorder.pause();
-    this.pauseStart = Date.now();
+    this.trainingSessionFlow.pause();
     this.controlsView.showPaused();
   }
 
   resumeRecording() {
-    this.isPaused = false;
-    this.audioRecorder.resume();
-    this.pausedTime += Date.now() - this.pauseStart;
-    this.pauseStart = null;
+    this.trainingSessionFlow.resume();
     this.controlsView.showResumed();
   }
 
   async stopRecording() {
-    await this.audioRecorder.stop();
-
-    const stopResult = await window.api.stopASR();
-    if (stopResult && stopResult.finalText) {
+    const stopResult = await this.trainingSessionFlow.stop();
+    if (stopResult.finalText) {
       this.handleASRResult({ text: stopResult.finalText, isFinal: true });
     }
-    this.isRecording = false;
-    this.isPaused = false;
 
     clearInterval(this.timerInterval);
-    this.stats.duration = getElapsedSeconds(this.startTime, this.pausedTime, this.pauseStart);
+    this.stats.duration = stopResult.duration;
 
     this.controlsView.showStopped(Boolean(this.fullText.trim()));
   }
@@ -307,8 +293,7 @@ class ExpressionTrainer {
   // ===== 工具 =====
 
   updateTimer() {
-    const elapsed = getElapsedSeconds(this.startTime, this.pausedTime, this.pauseStart);
-    this.controlsView.setTimerText(formatTimer(elapsed));
+    this.controlsView.setTimerText(formatTimer(this.trainingSessionFlow.getDuration()));
   }
 
   resetStats() {
