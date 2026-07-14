@@ -22,6 +22,8 @@ contextBridge.exposeInMainWorld('api', {
   getCustomPrompt: () => ipcRenderer.invoke('get-custom-prompt'),
   saveCustomPrompt: (data) => ipcRenderer.invoke('save-custom-prompt', data),
   closeWindow: () => ipcRenderer.invoke('close-current-window'),
+  getModelStatus: () => ipcRenderer.invoke('get-model-status'),
+  openModelsDir: () => ipcRenderer.invoke('open-models-dir'),
   initASR: () => ipcRenderer.invoke('init-asr'),
   feedAudio: (samples) => ipcRenderer.invoke('feed-audio', Array.from(samples)),
   stopASR: () => ipcRenderer.invoke('stop-asr'),

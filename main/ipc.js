@@ -9,6 +9,7 @@ const {
 } = require('../services/settings-service');
 const { loadCustomPrompt, saveCustomPrompt } = require('../services/prompt-service');
 const { saveMarkdownFile } = require('../services/file-service');
+const { getModelStatus, openExternalModelsDir } = require('../services/model-service');
 
 function registerIpcHandlers({
   getMainWindow,
@@ -47,6 +48,13 @@ function registerIpcHandlers({
       win.close();
     }
     return { success: true };
+  });
+
+  ipcMain.handle('get-model-status', () => getModelStatus());
+
+  ipcMain.handle('open-models-dir', async () => {
+    const dir = await openExternalModelsDir();
+    return { success: true, dir };
   });
 
   ipcMain.handle('init-asr', async () => {

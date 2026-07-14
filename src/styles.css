@@ -84,6 +84,64 @@ button, input, select, .subtitle-scroll, .feedback-content, .modal-body {
   gap: 4px;
 }
 
+.model-status {
+  margin: 8px 16px 0;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid #2A2D33;
+  border-radius: 8px;
+  background: #17191C;
+  color: #A8ADB5;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.model-status > div:first-child {
+  min-width: 0;
+}
+
+.model-status-dot {
+  width: 7px;
+  height: 7px;
+  display: inline-block;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: #6F7682;
+  vertical-align: 1px;
+}
+
+.model-status-ok .model-status-dot {
+  background: #4FB477;
+}
+
+.model-status-missing {
+  border-color: rgba(226, 85, 99, 0.55);
+}
+
+.model-status-missing .model-status-dot {
+  background: #E25563;
+}
+
+.model-status-actions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 6px;
+}
+
+.model-download-link {
+  color: #FFB020;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.model-download-link:hover {
+  color: #F2F3F5;
+}
+
 .btn-paste-top {
   background: #1a1a1a;
   border-color: #444;

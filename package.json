@@ -5,7 +5,9 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "dev": "electron . --dev"
+    "dev": "electron . --dev",
+    "dist": "electron-builder --dir",
+    "pack": "electron-builder"
   },
   "keywords": [
     "expression",
@@ -17,12 +19,35 @@
   "author": "sisi",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^33.0.0"
+    "electron": "^33.0.0",
+    "electron-builder": "^26.0.12"
   },
   "dependencies": {
     "dompurify": "^3.4.12",
     "jsdom": "^29.1.1",
     "markdown-it": "^14.3.0",
     "sherpa-onnx-node": "^1.10.0"
+  },
+  "build": {
+    "appId": "com.omelet.expression-trainer",
+    "productName": "omelet-表达训练系统",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "**/*",
+      "!models/**",
+      "!**/models/sherpa-onnx-*/**",
+      "!dist/**",
+      "!docs/**",
+      "!demo-*.html",
+      "!prompt-playground.html"
+    ],
+    "asarUnpack": [
+      "node_modules/sherpa-onnx-node/**"
+    ],
+    "win": {
+      "target": "nsis"
+    }
   }
 }

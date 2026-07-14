@@ -57,6 +57,18 @@
         </div>
       </div>
 
+      <div id="model-status" class="model-status model-status-checking">
+        <div>
+          <span class="model-status-dot"></span>
+          <span id="model-status-text">正在检测本地语音模型...</span>
+        </div>
+        <div id="model-status-actions" class="model-status-actions hidden">
+          <button id="btn-open-models-dir" class="btn-sm">打开模型目录</button>
+          <a id="model-download-link" class="model-download-link" target="_blank" rel="noreferrer">下载模型</a>
+          <button id="btn-refresh-model-status" class="btn-sm">重新检测</button>
+        </div>
+      </div>
+
       <!-- 字幕滚动区 -->
       <div id="subtitle-scroll" class="subtitle-scroll">
         <div id="subtitle-container" class="subtitle-container">
