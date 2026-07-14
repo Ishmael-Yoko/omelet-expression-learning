@@ -20,6 +20,7 @@ const { AudioRecorder } = window.OmeletAudioRecorder;
 const { ExportActions } = window.OmeletExportActions;
 const { buildAnalysisFeedbackItems } = window.OmeletAnalysisFeedbackRules;
 const { PasteAnalysisFlow } = window.OmeletPasteAnalysisFlow;
+const { RealtimeFeedbackFlow } = window.OmeletRealtimeFeedbackFlow;
 
 class ExpressionTrainer {
   constructor() {
@@ -32,7 +33,6 @@ class ExpressionTrainer {
     this.fullText = '';
     this.sentences = [];
     this.stats = createEmptyStats();
-    this.lastFeedbackText = '';
     this.lastReport = '';
     this.audioRecorder = new AudioRecorder({
       feedAudio: samples => window.api.feedAudio(samples),
@@ -48,6 +48,10 @@ class ExpressionTrainer {
       analyzeText: text => window.api.analyzeText(text),
       applyAnalysisToStats,
       renderSentence: (sentence, analysis) => this.transcriptView.renderSentence(sentence, analysis),
+    });
+    this.realtimeFeedbackFlow = new RealtimeFeedbackFlow({
+      getRealtimeFeedback: text => window.api.getRealtimeFeedback(text),
+      addFeedback: line => this.feedbackView.add(line),
     });
 
     this.initElements();
@@ -186,6 +190,7 @@ class ExpressionTrainer {
     this.pausedTime = 0;
     this.fullText = '';
     this.sentences = [];
+    this.realtimeFeedbackFlow.reset();
     this.resetStats();
     this.transcriptView.clear();
 
@@ -235,9 +240,7 @@ class ExpressionTrainer {
         this.transcriptView.renderFinal(text, analysis);
       });
 
-      if (this.fullText.length - this.lastFeedbackText.length >= 30) {
-        this.requestRealtimeFeedback();
-      }
+      this.requestRealtimeFeedback();
       return;
     }
     this.transcriptView.renderInterim(text);
@@ -264,14 +267,7 @@ class ExpressionTrainer {
   // ===== 实时反馈 =====
 
   async requestRealtimeFeedback() {
-    this.lastFeedbackText = this.fullText;
-    const result = await window.api.getRealtimeFeedback(this.fullText);
-    if (result.success && result.feedback) {
-      const lines = result.feedback.split('\n').filter(l => l.trim());
-      lines.forEach(line => {
-        this.feedbackView.add(line.trim());
-      });
-    }
+    await this.realtimeFeedbackFlow.request(this.fullText);
   }
 
   // ===== 报告 =====
@@ -348,6 +344,7 @@ class ExpressionTrainer {
     this.fullText = '';
     this.sentences = [];
     this.lastReport = '';
+    this.realtimeFeedbackFlow.reset();
     this.transcriptView.resetHint();
     this.resetStats();
     this.controlsView.reset();
@@ -374,7 +371,7 @@ class ExpressionTrainer {
 
     this.controlsView.showTextReady();
 
-    this.requestRealtimeFeedback();
+    await this.realtimeFeedbackFlow.request(this.fullText, { force: true });
   }
 }
 
