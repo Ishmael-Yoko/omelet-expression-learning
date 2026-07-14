@@ -21,6 +21,7 @@ const { ExportActions } = window.OmeletExportActions;
 const { buildAnalysisFeedbackItems } = window.OmeletAnalysisFeedbackRules;
 const { PasteAnalysisFlow } = window.OmeletPasteAnalysisFlow;
 const { RealtimeFeedbackFlow } = window.OmeletRealtimeFeedbackFlow;
+const { FinalReportFlow } = window.OmeletFinalReportFlow;
 
 class ExpressionTrainer {
   constructor() {
@@ -52,6 +53,12 @@ class ExpressionTrainer {
     this.realtimeFeedbackFlow = new RealtimeFeedbackFlow({
       getRealtimeFeedback: text => window.api.getRealtimeFeedback(text),
       addFeedback: line => this.feedbackView.add(line),
+    });
+    this.finalReportFlow = new FinalReportFlow({
+      getFinalReport: payload => window.api.getFinalReport(payload),
+      openLoading: () => this.reportView.openLoading(),
+      renderReport: report => this.reportView.render(report),
+      showError: error => this.reportView.showError(error),
     });
 
     this.initElements();
@@ -273,18 +280,12 @@ class ExpressionTrainer {
   // ===== 报告 =====
 
   async generateReport() {
-    this.reportView.openLoading();
-
-    const result = await window.api.getFinalReport({
+    const result = await this.finalReportFlow.generate({
       fullText: this.fullText,
       stats: this.stats
     });
-
     if (result.success) {
       this.lastReport = result.report;
-      this.reportView.render(result.report);
-    } else {
-      this.reportView.showError(result.error);
     }
   }
 
