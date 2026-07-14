@@ -1,20 +1,10 @@
 const { contextBridge, ipcRenderer } = require('electron');
-const MarkdownIt = require('markdown-it');
-const createDOMPurify = require('dompurify');
-const { JSDOM } = require('jsdom');
 const { PROVIDER_PRESETS } = require('./config/ai-providers');
-
-const md = new MarkdownIt({
-  html: false,
-  linkify: true,
-  typographer: true,
-});
-const windowForPurify = new JSDOM('').window;
-const DOMPurify = createDOMPurify(windowForPurify);
+const { renderMarkdown } = require('./lib/markdown');
 
 contextBridge.exposeInMainWorld('api', {
   getProviderPresets: () => JSON.parse(JSON.stringify(PROVIDER_PRESETS)),
-  renderMarkdown: (markdown) => DOMPurify.sanitize(md.render(markdown || '')),
+  renderMarkdown,
   getSettings: () => ipcRenderer.invoke('get-settings'),
   saveSettings: (settings) => ipcRenderer.invoke('save-settings', settings),
   openSettings: () => ipcRenderer.invoke('open-settings'),
