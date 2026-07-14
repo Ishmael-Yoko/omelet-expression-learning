@@ -14,6 +14,7 @@ const {
   renderHighlightedText,
   splitTranscriptSentences,
 } = window.OmeletAppUtils;
+const { TranscriptView } = window.OmeletTranscriptView;
 
 class ExpressionTrainer {
   constructor() {
@@ -53,6 +54,11 @@ class ExpressionTrainer {
     this.timer = document.getElementById('timer');
     this.subtitleScroll = document.getElementById('subtitle-scroll');
     this.subtitleContainer = document.getElementById('subtitle-container');
+    this.transcriptView = new TranscriptView({
+      scrollEl: this.subtitleScroll,
+      containerEl: this.subtitleContainer,
+      renderHighlightedText,
+    });
     this.feedbackContent = document.getElementById('feedback-content');
     this.reportModal = document.getElementById('report-modal');
     this.reportBody = document.getElementById('report-body');
@@ -148,7 +154,7 @@ class ExpressionTrainer {
     this.fullText = '';
     this.sentences = [];
     this.resetStats();
-    this.subtitleContainer.innerHTML = '';
+    this.transcriptView.clear();
 
     this.btnStart.classList.add('hidden');
     this.btnPause.classList.remove('hidden');
@@ -213,7 +219,7 @@ class ExpressionTrainer {
       this.sentences.push(text);
       this.fullText += text;
       this.analyzeCurrentSentence(text).then(analysis => {
-        this.renderSubtitle(text, true, analysis);
+        this.transcriptView.renderFinal(text, analysis);
       });
 
       if (this.fullText.length - this.lastFeedbackText.length >= 30) {
@@ -221,33 +227,7 @@ class ExpressionTrainer {
       }
       return;
     }
-    this.renderSubtitle(text, isFinal);
-  }
-
-  renderSubtitle(currentText, isFinal, analysis = null) {
-    if (isFinal) {
-      const interim = this.subtitleContainer.querySelector('.interim-line');
-      if (interim) interim.remove();
-
-      this.subtitleContainer.querySelectorAll('.subtitle-line:not(.old)').forEach(el => {
-        el.classList.add('old');
-      });
-
-      const line = document.createElement('div');
-      line.className = 'subtitle-line';
-      line.innerHTML = renderHighlightedText(currentText, analysis);
-      this.subtitleContainer.appendChild(line);
-    } else {
-      let interim = this.subtitleContainer.querySelector('.interim-line');
-      if (!interim) {
-        interim = document.createElement('div');
-        interim.className = 'subtitle-line interim-line';
-        this.subtitleContainer.appendChild(interim);
-      }
-      interim.textContent = currentText;
-    }
-
-    this.subtitleScroll.scrollTop = this.subtitleScroll.scrollHeight;
+    this.transcriptView.renderInterim(text);
   }
 
   // ===== 分析 =====
@@ -388,11 +368,7 @@ class ExpressionTrainer {
   }
 
   showError(msg) {
-    const line = document.createElement('div');
-    line.className = 'subtitle-line';
-    line.style.color = '#ff6b6b';
-    line.textContent = msg;
-    this.subtitleContainer.appendChild(line);
+    this.transcriptView.renderError(msg);
   }
 
   // ===== 复制 & 保存原文 & 清空 =====
@@ -426,7 +402,7 @@ class ExpressionTrainer {
     this.fullText = '';
     this.sentences = [];
     this.lastReport = '';
-    this.subtitleContainer.innerHTML = '<div class="subtitle-line hint">点击下方按钮开始说话</div>';
+    this.transcriptView.resetHint();
     this.feedbackContent.innerHTML = '';
     this.resetStats();
     this.timer.textContent = '00:00';
@@ -450,7 +426,7 @@ class ExpressionTrainer {
     if (!text) return;
 
     this.pasteModal.classList.add('hidden');
-    this.subtitleContainer.innerHTML = '';
+    this.transcriptView.clear();
     this.fullText = text;
     this.resetStats();
 
@@ -458,15 +434,11 @@ class ExpressionTrainer {
     this.sentences = sentences;
 
     for (const sentence of sentences) {
-      const line = document.createElement('div');
-      line.className = 'subtitle-line';
-
       const analysis = await window.api.analyzeText(sentence);
       if (analysis) {
         applyAnalysisToStats(this.stats, analysis);
       }
-      line.innerHTML = renderHighlightedText(sentence, analysis);
-      this.subtitleContainer.appendChild(line);
+      this.transcriptView.renderSentence(sentence, analysis);
     }
 
     this.stats.duration = 0;
