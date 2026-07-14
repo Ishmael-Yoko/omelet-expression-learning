@@ -50,6 +50,58 @@
       .filter(Boolean);
   }
 
+  function escapeHtml(value) {
+    return String(value || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function getAnalysisHighlightTerms(analysis) {
+    if (!analysis) {
+      return [];
+    }
+
+    const terms = [
+      ...(analysis.vagueWords || []).map(item => ({ word: item.word, type: 'vague' })),
+      ...(analysis.fillers || []).map(item => ({ word: item.word, type: 'filler' })),
+      ...(analysis.hedges || []).map(item => ({ word: item.word, type: 'hedge' })),
+    ];
+    const seen = new Set();
+
+    return terms
+      .filter(item => item.word && !seen.has(`${item.type}:${item.word}`) && seen.add(`${item.type}:${item.word}`))
+      .sort((a, b) => b.word.length - a.word.length);
+  }
+
+  function renderHighlightedText(text, analysis) {
+    const source = String(text || '');
+    const terms = getAnalysisHighlightTerms(analysis);
+
+    if (!source || terms.length === 0) {
+      return escapeHtml(source);
+    }
+
+    let html = '';
+    let index = 0;
+
+    while (index < source.length) {
+      const match = terms.find(term => source.startsWith(term.word, index));
+      if (!match) {
+        html += escapeHtml(source[index]);
+        index += 1;
+        continue;
+      }
+
+      html += `<span class="${match.type}">${escapeHtml(match.word)}</span>`;
+      index += match.word.length;
+    }
+
+    return html;
+  }
+
   function getExportTimestamp(now = new Date()) {
     return {
       dateStr: now.toISOString().slice(0, 10),
@@ -83,9 +135,12 @@
     buildReportMarkdown,
     calculateExpressionDensity,
     createEmptyStats,
+    escapeHtml,
     formatTimer,
+    getAnalysisHighlightTerms,
     getElapsedSeconds,
     getExportTimestamp,
+    renderHighlightedText,
     splitTranscriptSentences,
   };
 

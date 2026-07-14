@@ -11,6 +11,7 @@ const {
   formatTimer,
   getElapsedSeconds,
   getExportTimestamp,
+  renderHighlightedText,
   splitTranscriptSentences,
 } = window.OmeletAppUtils;
 
@@ -211,16 +212,19 @@ class ExpressionTrainer {
     if (isFinal) {
       this.sentences.push(text);
       this.fullText += text;
-      this.analyzeCurrentSentence(text);
+      this.analyzeCurrentSentence(text).then(analysis => {
+        this.renderSubtitle(text, true, analysis);
+      });
 
       if (this.fullText.length - this.lastFeedbackText.length >= 30) {
         this.requestRealtimeFeedback();
       }
+      return;
     }
     this.renderSubtitle(text, isFinal);
   }
 
-  renderSubtitle(currentText, isFinal) {
+  renderSubtitle(currentText, isFinal, analysis = null) {
     if (isFinal) {
       const interim = this.subtitleContainer.querySelector('.interim-line');
       if (interim) interim.remove();
@@ -231,7 +235,7 @@ class ExpressionTrainer {
 
       const line = document.createElement('div');
       line.className = 'subtitle-line';
-      line.innerHTML = this.highlightText(currentText);
+      line.innerHTML = renderHighlightedText(currentText, analysis);
       this.subtitleContainer.appendChild(line);
     } else {
       let interim = this.subtitleContainer.querySelector('.interim-line');
@@ -244,19 +248,6 @@ class ExpressionTrainer {
     }
 
     this.subtitleScroll.scrollTop = this.subtitleScroll.scrollHeight;
-  }
-
-  highlightText(text) {
-    let result = text;
-    const vagueWords = ['开心','难过','害怕','生气','不舒服','很好','很多','很快','很大','很小','好看','不好','喜欢','讨厌','觉得','想想'];
-    vagueWords.forEach(w => {
-      result = result.replace(new RegExp(w, 'g'), `<span class="vague">${w}</span>`);
-    });
-    const fillerPatterns = /(嗯|啊|呃|额|那个|就是|然后|这个|对吧|是吧|反正|基本上)/g;
-    result = result.replace(fillerPatterns, '<span class="filler">$1</span>');
-    const hedgePatterns = /(可能|也许|大概|应该|我觉得|好像|似乎|或许|不一定|差不多|感觉)/g;
-    result = result.replace(hedgePatterns, '<span class="hedge">$1</span>');
-    return result;
   }
 
   // ===== 分析 =====
@@ -281,6 +272,7 @@ class ExpressionTrainer {
         this.addFeedbackItem(`「${uniqueHedges.join('」「')}」 -> 直接说`, 'hedge');
       }
     }
+    return analysis;
   }
 
   updateStatsDisplay() {
@@ -468,13 +460,13 @@ class ExpressionTrainer {
     for (const sentence of sentences) {
       const line = document.createElement('div');
       line.className = 'subtitle-line';
-      line.innerHTML = this.highlightText(sentence.trim());
-      this.subtitleContainer.appendChild(line);
 
       const analysis = await window.api.analyzeText(sentence);
       if (analysis) {
         applyAnalysisToStats(this.stats, analysis);
       }
+      line.innerHTML = renderHighlightedText(sentence, analysis);
+      this.subtitleContainer.appendChild(line);
     }
 
     this.stats.duration = 0;

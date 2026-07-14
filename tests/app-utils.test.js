@@ -8,9 +8,12 @@ const {
   buildReportMarkdown,
   calculateExpressionDensity,
   createEmptyStats,
+  escapeHtml,
   formatTimer,
+  getAnalysisHighlightTerms,
   getElapsedSeconds,
   getExportTimestamp,
+  renderHighlightedText,
   splitTranscriptSentences,
 } = require('../src/app-utils');
 
@@ -91,4 +94,36 @@ test('export helpers generate stable markdown and filenames', () => {
   });
   assert.equal(originalMarkdown.includes('# omelet-表达训练系统原文'), true);
   assert.equal(originalMarkdown.includes('逐字稿'), true);
+});
+
+test('escapeHtml escapes user transcript markup before subtitle rendering', () => {
+  assert.equal(
+    escapeHtml('<img src=x onerror="alert(1)">'),
+    '&lt;img src=x onerror=&quot;alert(1)&quot;&gt;',
+  );
+});
+
+test('renderHighlightedText uses lexicon analysis terms and escapes unmatched text', () => {
+  const html = renderHighlightedText('嗯我觉得很好<script>', {
+    fillers: [{ word: '嗯' }],
+    hedges: [{ word: '我觉得' }],
+    vagueWords: [{ word: '很好' }],
+  });
+
+  assert.equal(
+    html,
+    '<span class="filler">嗯</span><span class="hedge">我觉得</span><span class="vague">很好</span>&lt;script&gt;',
+  );
+});
+
+test('getAnalysisHighlightTerms de-duplicates and prefers longer matches first', () => {
+  assert.deepEqual(getAnalysisHighlightTerms({
+    fillers: [{ word: '嗯' }],
+    hedges: [{ word: '我觉得' }, { word: '我觉得' }],
+    vagueWords: [{ word: '觉得' }],
+  }), [
+    { word: '我觉得', type: 'hedge' },
+    { word: '觉得', type: 'vague' },
+    { word: '嗯', type: 'filler' },
+  ]);
 });
