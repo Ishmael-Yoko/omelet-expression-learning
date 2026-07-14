@@ -18,6 +18,7 @@ const { TranscriptView } = window.OmeletTranscriptView;
 const { FeedbackView } = window.OmeletFeedbackView;
 const { ReportView } = window.OmeletReportView;
 const { ModelStatusView } = window.OmeletModelStatusView;
+const { TrainingControlsView } = window.OmeletTrainingControlsView;
 
 class ExpressionTrainer {
   constructor() {
@@ -55,6 +56,17 @@ class ExpressionTrainer {
     this.pasteModal = document.getElementById('paste-modal');
     this.pasteTextarea = document.getElementById('paste-textarea');
     this.timer = document.getElementById('timer');
+    this.controlsView = new TrainingControlsView({
+      startButtonEl: this.btnStart,
+      pauseButtonEl: this.btnPause,
+      resumeButtonEl: this.btnResume,
+      stopButtonEl: this.btnStop,
+      reportButtonEl: this.btnReport,
+      copyTextButtonEl: this.btnCopyText,
+      saveTextButtonEl: this.btnSaveText,
+      clearButtonEl: this.btnClear,
+      timerEl: this.timer,
+    });
     this.subtitleScroll = document.getElementById('subtitle-scroll');
     this.subtitleContainer = document.getElementById('subtitle-container');
     this.transcriptView = new TranscriptView({
@@ -160,12 +172,7 @@ class ExpressionTrainer {
     this.resetStats();
     this.transcriptView.clear();
 
-    this.btnStart.classList.add('hidden');
-    this.btnPause.classList.remove('hidden');
-    this.btnStop.classList.remove('hidden');
-    this.btnReport.classList.add('hidden');
-    this.btnResume.classList.add('hidden');
-    this.timer.classList.add('active');
+    this.controlsView.showRecordingStarted();
 
     this.timerInterval = setInterval(() => this.updateTimer(), 1000);
   }
@@ -173,18 +180,14 @@ class ExpressionTrainer {
   pauseRecording() {
     this.isPaused = true;
     this.pauseStart = Date.now();
-    this.btnPause.classList.add('hidden');
-    this.btnResume.classList.remove('hidden');
-    this.timer.classList.remove('active');
+    this.controlsView.showPaused();
   }
 
   resumeRecording() {
     this.isPaused = false;
     this.pausedTime += Date.now() - this.pauseStart;
     this.pauseStart = null;
-    this.btnResume.classList.add('hidden');
-    this.btnPause.classList.remove('hidden');
-    this.timer.classList.add('active');
+    this.controlsView.showResumed();
   }
 
   async stopRecording() {
@@ -202,18 +205,7 @@ class ExpressionTrainer {
     clearInterval(this.timerInterval);
     this.stats.duration = getElapsedSeconds(this.startTime, this.pausedTime, this.pauseStart);
 
-    this.btnStop.classList.add('hidden');
-    this.btnPause.classList.add('hidden');
-    this.btnResume.classList.add('hidden');
-    this.btnStart.classList.remove('hidden');
-    this.timer.classList.remove('active');
-
-    if (this.fullText.trim()) {
-      this.btnReport.classList.remove('hidden');
-      this.btnCopyText.classList.remove('hidden');
-      this.btnSaveText.classList.remove('hidden');
-      this.btnClear.classList.remove('hidden');
-    }
+    this.controlsView.showStopped(Boolean(this.fullText.trim()));
   }
 
   // ===== ASR结果处理 =====
@@ -322,7 +314,7 @@ class ExpressionTrainer {
 
   updateTimer() {
     const elapsed = getElapsedSeconds(this.startTime, this.pausedTime, this.pauseStart);
-    this.timer.textContent = formatTimer(elapsed);
+    this.controlsView.setTimerText(formatTimer(elapsed));
   }
 
   resetStats() {
@@ -340,8 +332,7 @@ class ExpressionTrainer {
   copyOriginalText() {
     if (!this.fullText.trim()) return;
     navigator.clipboard.writeText(this.fullText).then(() => {
-      this.btnCopyText.querySelector('.btn-label').textContent = '✓ 已复制';
-      setTimeout(() => { this.btnCopyText.querySelector('.btn-label').textContent = '复制原文'; }, 1500);
+      this.controlsView.markCopied();
     });
   }
 
@@ -354,8 +345,7 @@ class ExpressionTrainer {
     try {
       const result = await window.api.saveFile(markdown, filename);
       if (result.success) {
-        this.btnSaveText.querySelector('.btn-label').textContent = '✓ 已保存';
-        setTimeout(() => { this.btnSaveText.querySelector('.btn-label').textContent = '保存原文'; }, 2000);
+        this.controlsView.markSaved();
       }
     } catch (e) {
       alert('保存失败: ' + e.message);
@@ -368,12 +358,7 @@ class ExpressionTrainer {
     this.lastReport = '';
     this.transcriptView.resetHint();
     this.resetStats();
-    this.timer.textContent = '00:00';
-    this.timer.classList.remove('active');
-    this.btnReport.classList.add('hidden');
-    this.btnCopyText.classList.add('hidden');
-    this.btnSaveText.classList.add('hidden');
-    this.btnClear.classList.add('hidden');
+    this.controlsView.reset();
   }
 
   // ===== 粘贴逐字稿分析 =====
@@ -407,10 +392,7 @@ class ExpressionTrainer {
     this.stats.duration = 0;
     this.updateStatsDisplay();
 
-    this.btnReport.classList.remove('hidden');
-    this.btnCopyText.classList.remove('hidden');
-    this.btnSaveText.classList.remove('hidden');
-    this.btnClear.classList.remove('hidden');
+    this.controlsView.showTextReady();
 
     this.requestRealtimeFeedback();
   }
