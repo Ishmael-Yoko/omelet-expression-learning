@@ -24,14 +24,12 @@ const { RealtimeFeedbackFlow } = window.OmeletRealtimeFeedbackFlow;
 const { FinalReportFlow } = window.OmeletFinalReportFlow;
 const { TrainingSessionFlow } = window.OmeletTrainingSessionFlow;
 const { TranscriptAnalysisFlow } = window.OmeletTranscriptAnalysisFlow;
+const { createTrainerState, resetTrainerState, setTranscriptText } = window.OmeletTrainerState;
 
 class ExpressionTrainer {
   constructor() {
     this.timerInterval = null;
-    this.fullText = '';
-    this.sentences = [];
-    this.stats = createEmptyStats();
-    this.lastReport = '';
+    Object.assign(this, createTrainerState({ createEmptyStats }));
     this.audioRecorder = new AudioRecorder({
       feedAudio: samples => window.api.feedAudio(samples),
       onResult: result => this.handleASRResult(result),
@@ -202,10 +200,10 @@ class ExpressionTrainer {
       return;
     }
 
-    this.fullText = '';
-    this.sentences = [];
+    resetTrainerState(this, { createEmptyStats, keepReport: true });
     this.realtimeFeedbackFlow.reset();
-    this.resetStats();
+    this.updateStatsDisplay();
+    this.feedbackView.clear();
     this.transcriptView.clear();
 
     this.controlsView.showRecordingStarted();
@@ -292,12 +290,6 @@ class ExpressionTrainer {
     this.controlsView.setTimerText(formatTimer(this.trainingSessionFlow.getDuration()));
   }
 
-  resetStats() {
-    this.stats = createEmptyStats();
-    this.updateStatsDisplay();
-    this.feedbackView.clear();
-  }
-
   showError(msg) {
     this.transcriptView.renderError(msg);
   }
@@ -323,12 +315,11 @@ class ExpressionTrainer {
   }
 
   clearAll() {
-    this.fullText = '';
-    this.sentences = [];
-    this.lastReport = '';
+    resetTrainerState(this, { createEmptyStats });
     this.realtimeFeedbackFlow.reset();
     this.transcriptView.resetHint();
-    this.resetStats();
+    this.updateStatsDisplay();
+    this.feedbackView.clear();
     this.controlsView.reset();
   }
 
@@ -344,8 +335,9 @@ class ExpressionTrainer {
 
     this.pasteModalView.close();
     this.transcriptView.clear();
-    this.fullText = text;
-    this.resetStats();
+    setTranscriptText(this, text, { createEmptyStats, keepReport: true });
+    this.updateStatsDisplay();
+    this.feedbackView.clear();
 
     const result = await this.pasteAnalysisFlow.analyze({ text, stats: this.stats });
     this.sentences = result.sentences;
