@@ -20,6 +20,7 @@ const { ReportView } = window.OmeletReportView;
 const { ModelStatusView } = window.OmeletModelStatusView;
 const { TrainingControlsView } = window.OmeletTrainingControlsView;
 const { PasteModalView } = window.OmeletPasteModalView;
+const { StatsView } = window.OmeletStatsView;
 
 class ExpressionTrainer {
   constructor() {
@@ -99,6 +100,13 @@ class ExpressionTrainer {
     this.statHedges = document.getElementById('stat-hedges');
     this.statVague = document.getElementById('stat-vague');
     this.statDensity = document.getElementById('stat-density');
+    this.statsView = new StatsView({
+      fillersEl: this.statFillers,
+      hedgesEl: this.statHedges,
+      vagueEl: this.statVague,
+      densityEl: this.statDensity,
+      calculateExpressionDensity,
+    });
     this.modelStatus = document.getElementById('model-status');
     this.modelStatusText = document.getElementById('model-status-text');
     this.modelStatusActions = document.getElementById('model-status-actions');
@@ -259,10 +267,7 @@ class ExpressionTrainer {
   }
 
   updateStatsDisplay() {
-    this.statFillers.textContent = this.stats.fillers;
-    this.statHedges.textContent = this.stats.hedges;
-    this.statVague.textContent = this.stats.vagueWords;
-    this.statDensity.textContent = calculateExpressionDensity(this.stats);
+    this.statsView.render(this.stats);
   }
 
   // ===== 实时反馈 =====
