@@ -1,7 +1,18 @@
 // omelet expression trainer renderer entry
 
-const APP_NAME = 'omelet-表达训练系统';
-const REPORT_FILE_PREFIX = 'omelet-表达训练';
+const {
+  applyAnalysisToStats,
+  buildOriginalTextFilename,
+  buildOriginalTextMarkdown,
+  buildReportFilename,
+  buildReportMarkdown,
+  calculateExpressionDensity,
+  createEmptyStats,
+  formatTimer,
+  getElapsedSeconds,
+  getExportTimestamp,
+  splitTranscriptSentences,
+} = window.OmeletAppUtils;
 
 class ExpressionTrainer {
   constructor() {
@@ -13,7 +24,7 @@ class ExpressionTrainer {
     this.timerInterval = null;
     this.fullText = '';
     this.sentences = [];
-    this.stats = { fillers: 0, hedges: 0, vagueWords: 0, totalWords: 0, duration: 0 };
+    this.stats = createEmptyStats();
     this.lastFeedbackText = '';
     this.lastReport = '';
 
@@ -178,9 +189,7 @@ class ExpressionTrainer {
     this.isPaused = false;
 
     clearInterval(this.timerInterval);
-    let totalPaused = this.pausedTime;
-    if (this.pauseStart) totalPaused += Date.now() - this.pauseStart;
-    this.stats.duration = Math.floor((Date.now() - this.startTime - totalPaused) / 1000);
+    this.stats.duration = getElapsedSeconds(this.startTime, this.pausedTime, this.pauseStart);
 
     this.btnStop.classList.add('hidden');
     this.btnPause.classList.add('hidden');
@@ -255,10 +264,7 @@ class ExpressionTrainer {
   async analyzeCurrentSentence(text) {
     const analysis = await window.api.analyzeText(text);
     if (analysis) {
-      this.stats.fillers += analysis.fillers.length;
-      this.stats.hedges += analysis.hedges.length;
-      this.stats.vagueWords += analysis.vagueWords.length;
-      this.stats.totalWords += analysis.totalWords;
+      applyAnalysisToStats(this.stats, analysis);
       this.updateStatsDisplay();
       if (analysis.vagueWords && analysis.vagueWords.length > 0) {
         analysis.vagueWords.forEach(item => {
@@ -281,10 +287,7 @@ class ExpressionTrainer {
     this.statFillers.textContent = this.stats.fillers;
     this.statHedges.textContent = this.stats.hedges;
     this.statVague.textContent = this.stats.vagueWords;
-    if (this.stats.totalWords > 0) {
-      const density = ((this.stats.totalWords - this.stats.fillers - this.stats.hedges) / this.stats.totalWords * 100).toFixed(0);
-      this.statDensity.textContent = density + '%';
-    }
+    this.statDensity.textContent = calculateExpressionDensity(this.stats);
   }
 
   // ===== 实时反馈 =====
@@ -357,11 +360,14 @@ class ExpressionTrainer {
 
   async saveReport() {
     if (!this.lastReport) return;
-    const now = new Date();
-    const dateStr = now.toISOString().slice(0, 10);
-    const timeStr = now.toTimeString().slice(0, 5).replace(':', '');
-    const markdown = `# ${APP_NAME}报告\n\n**日期**: ${dateStr}  \n**时长**: ${this.stats.duration}秒  \n**总字数**: ${this.stats.totalWords}  \n\n---\n\n## 完整原文\n\n${this.fullText}\n\n---\n\n${this.lastReport}`;
-    const filename = `${REPORT_FILE_PREFIX}-${dateStr}-${timeStr}.md`;
+    const { dateStr, timeStr } = getExportTimestamp();
+    const markdown = buildReportMarkdown({
+      dateStr,
+      stats: this.stats,
+      fullText: this.fullText,
+      report: this.lastReport,
+    });
+    const filename = buildReportFilename({ dateStr, timeStr });
 
     try {
       const result = await window.api.saveFile(markdown, filename);
@@ -379,16 +385,12 @@ class ExpressionTrainer {
   // ===== 工具 =====
 
   updateTimer() {
-    let totalPaused = this.pausedTime;
-    if (this.pauseStart) totalPaused += Date.now() - this.pauseStart;
-    const elapsed = Math.floor((Date.now() - this.startTime - totalPaused) / 1000);
-    const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
-    const seconds = (elapsed % 60).toString().padStart(2, '0');
-    this.timer.textContent = `${minutes}:${seconds}`;
+    const elapsed = getElapsedSeconds(this.startTime, this.pausedTime, this.pauseStart);
+    this.timer.textContent = formatTimer(elapsed);
   }
 
   resetStats() {
-    this.stats = { fillers: 0, hedges: 0, vagueWords: 0, totalWords: 0, duration: 0 };
+    this.stats = createEmptyStats();
     this.updateStatsDisplay();
     this.feedbackContent.innerHTML = '';
   }
@@ -413,11 +415,9 @@ class ExpressionTrainer {
 
   async saveOriginalText() {
     if (!this.fullText.trim()) return;
-    const now = new Date();
-    const dateStr = now.toISOString().slice(0, 10);
-    const timeStr = now.toTimeString().slice(0, 5).replace(':', '');
-    const markdown = `# ${APP_NAME}原文\n\n**日期**: ${dateStr}\n\n---\n\n${this.fullText}`;
-    const filename = `${REPORT_FILE_PREFIX}-原文-${dateStr}-${timeStr}.md`;
+    const { dateStr, timeStr } = getExportTimestamp();
+    const markdown = buildOriginalTextMarkdown({ dateStr, fullText: this.fullText });
+    const filename = buildOriginalTextFilename({ dateStr, timeStr });
 
     try {
       const result = await window.api.saveFile(markdown, filename);
@@ -462,7 +462,7 @@ class ExpressionTrainer {
     this.fullText = text;
     this.resetStats();
 
-    const sentences = text.split(/(?<=[。！？\n])/g).filter(s => s.trim());
+    const sentences = splitTranscriptSentences(text);
     this.sentences = sentences;
 
     for (const sentence of sentences) {
@@ -473,10 +473,7 @@ class ExpressionTrainer {
 
       const analysis = await window.api.analyzeText(sentence);
       if (analysis) {
-        this.stats.fillers += analysis.fillers.length;
-        this.stats.hedges += analysis.hedges.length;
-        this.stats.vagueWords += analysis.vagueWords.length;
-        this.stats.totalWords += analysis.totalWords;
+        applyAnalysisToStats(this.stats, analysis);
       }
     }
 
