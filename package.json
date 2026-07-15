@@ -4,8 +4,8 @@
   "description": "omelet-表达训练系统 - 本地桌面表达训练工具",
   "main": "main.js",
   "scripts": {
-    "start": "electron .",
-    "dev": "electron . --dev",
+    "start": "node scripts/start-electron.js",
+    "dev": "node scripts/start-electron.js --dev",
     "test": "node --test",
     "verify": "node scripts/verify.js",
     "dist": "electron-builder --dir",

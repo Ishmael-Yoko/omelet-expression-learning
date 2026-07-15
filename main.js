@@ -1,1 +1,3 @@
-require('./main');
+if (process.versions.electron) {
+  require('./main/index');
+}
