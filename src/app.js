@@ -25,6 +25,7 @@ const { FinalReportFlow } = window.OmeletFinalReportFlow;
 const { TrainingSessionFlow } = window.OmeletTrainingSessionFlow;
 const { TranscriptAnalysisFlow } = window.OmeletTranscriptAnalysisFlow;
 const { createTrainerState, resetTrainerState, setTranscriptText } = window.OmeletTrainerState;
+const { getAppElements } = window.OmeletAppElements;
 
 class ExpressionTrainer {
   constructor() {
@@ -78,22 +79,7 @@ class ExpressionTrainer {
   }
 
   initElements() {
-    this.btnStart = document.getElementById('btn-start');
-    this.btnPaste = document.getElementById('btn-paste');
-    this.btnPause = document.getElementById('btn-pause');
-    this.btnResume = document.getElementById('btn-resume');
-    this.btnStop = document.getElementById('btn-stop');
-    this.btnReport = document.getElementById('btn-report');
-    this.btnSettings = document.getElementById('btn-settings');
-    this.btnCloseReport = document.getElementById('btn-close-report');
-    this.btnClosePaste = document.getElementById('btn-close-paste');
-    this.btnAnalyzePaste = document.getElementById('btn-analyze-paste');
-    this.btnCopyText = document.getElementById('btn-copy-text');
-    this.btnSaveText = document.getElementById('btn-save-text');
-    this.btnClear = document.getElementById('btn-clear');
-    this.btnCopyReport = document.getElementById('btn-copy-report');
-    this.pasteModal = document.getElementById('paste-modal');
-    this.pasteTextarea = document.getElementById('paste-textarea');
+    Object.assign(this, getAppElements(document));
     this.pasteModalView = new PasteModalView({
       modalEl: this.pasteModal,
       textareaEl: this.pasteTextarea,
@@ -101,7 +87,6 @@ class ExpressionTrainer {
       analyzeButtonEl: this.btnAnalyzePaste,
       onAnalyze: () => this.analyzePastedText(),
     });
-    this.timer = document.getElementById('timer');
     this.controlsView = new TrainingControlsView({
       startButtonEl: this.btnStart,
       pauseButtonEl: this.btnPause,
@@ -113,17 +98,12 @@ class ExpressionTrainer {
       clearButtonEl: this.btnClear,
       timerEl: this.timer,
     });
-    this.subtitleScroll = document.getElementById('subtitle-scroll');
-    this.subtitleContainer = document.getElementById('subtitle-container');
     this.transcriptView = new TranscriptView({
       scrollEl: this.subtitleScroll,
       containerEl: this.subtitleContainer,
       renderHighlightedText,
     });
-    this.feedbackContent = document.getElementById('feedback-content');
     this.feedbackView = new FeedbackView({ containerEl: this.feedbackContent });
-    this.reportModal = document.getElementById('report-modal');
-    this.reportBody = document.getElementById('report-body');
     this.reportView = new ReportView({
       modalEl: this.reportModal,
       bodyEl: this.reportBody,
@@ -133,10 +113,6 @@ class ExpressionTrainer {
       copyText: (text) => navigator.clipboard.writeText(text),
       onSave: () => this.saveReport(),
     });
-    this.statFillers = document.getElementById('stat-fillers');
-    this.statHedges = document.getElementById('stat-hedges');
-    this.statVague = document.getElementById('stat-vague');
-    this.statDensity = document.getElementById('stat-density');
     this.statsView = new StatsView({
       fillersEl: this.statFillers,
       hedgesEl: this.statHedges,
@@ -144,12 +120,6 @@ class ExpressionTrainer {
       densityEl: this.statDensity,
       calculateExpressionDensity,
     });
-    this.modelStatus = document.getElementById('model-status');
-    this.modelStatusText = document.getElementById('model-status-text');
-    this.modelStatusActions = document.getElementById('model-status-actions');
-    this.btnOpenModelsDir = document.getElementById('btn-open-models-dir');
-    this.btnRefreshModelStatus = document.getElementById('btn-refresh-model-status');
-    this.modelDownloadLink = document.getElementById('model-download-link');
     this.modelStatusView = new ModelStatusView({
       statusEl: this.modelStatus,
       textEl: this.modelStatusText,
@@ -170,7 +140,7 @@ class ExpressionTrainer {
     this.btnStop.addEventListener('click', () => this.stopRecording());
     this.btnReport.addEventListener('click', () => this.generateReport());
     this.btnSettings.addEventListener('click', () => window.api.openSettings());
-    document.getElementById('btn-prompt-editor').addEventListener('click', () => window.api.openPromptEditor());
+    this.btnPromptEditor.addEventListener('click', () => window.api.openPromptEditor());
     this.reportView.bind();
     this.pasteModalView.bind();
     this.btnCopyText.addEventListener('click', () => this.copyOriginalText());
