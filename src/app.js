@@ -28,6 +28,7 @@ const { createTrainerState, resetTrainerState, setTranscriptText } = window.Omel
 const { getAppElements } = window.OmeletAppElements;
 const { HistoryView } = window.OmeletHistoryView;
 const { buildTrendSnapshot } = window.OmeletHistoryTrends;
+const { HistoryTrendView } = window.OmeletHistoryTrendView;
 const { getShortcutAction } = window.OmeletTrainingShortcuts;
 const { HistoryDetailView } = window.OmeletHistoryDetailView;
 
@@ -112,6 +113,10 @@ class ExpressionTrainer {
     this.historyView = new HistoryView({
       containerEl: this.historyContent,
       onSelect: record => this.openHistoryRecord(record),
+    });
+    this.historyTrendView = new HistoryTrendView({
+      containerEl: this.historyTrend,
+      onOpenDetail: snapshot => this.openHistoryTrendDetail(snapshot),
     });
     this.historyDetailView = new HistoryDetailView({
       escapeHtml: window.OmeletAppUtils.escapeHtml,
@@ -419,34 +424,37 @@ class ExpressionTrainer {
 
   renderHistoryTrend(records) {
     const snapshot = buildTrendSnapshot(records);
-    if (!snapshot.sessions) {
-      this.historyTrend.innerHTML = '<div class="history-trend-empty">最近 5 次训练趋势会显示在这里。</div>';
-      return;
-    }
+    this.historyTrendView.render(snapshot);
+  }
 
-    this.historyTrend.innerHTML = `
-      <div class="history-trend-head">
-        <span>最近 ${snapshot.sessions} 次</span>
-        <span>对比窗口 ${snapshot.windowSize} 次</span>
-      </div>
-      <div class="history-trend-grid">
-        <div class="history-trend-card">
-          <span>表达密度</span>
-          <strong>${snapshot.latestDensity ?? '--'}%</strong>
-          <em>${snapshot.densityDelta == null ? '样本不足' : `${snapshot.densityDelta >= 0 ? '+' : ''}${snapshot.densityDelta}%`}</em>
+  openHistoryTrendDetail(snapshot) {
+    const html = `
+      <section class="history-detail">
+        <div class="history-detail-head">
+          <span class="history-detail-tag">趋势分析</span>
+          <h2>最近 ${snapshot.sessions} 次训练变化</h2>
+          <p>对比窗口 ${snapshot.windowSize} 次</p>
         </div>
-        <div class="history-trend-card">
-          <span>填充词率</span>
-          <strong>${snapshot.latestFillerRate ?? '--'}</strong>
-          <em>${snapshot.fillerRateDelta == null ? '样本不足' : `${snapshot.fillerRateDelta >= 0 ? '+' : ''}${snapshot.fillerRateDelta}/分钟`}</em>
+        <div class="history-detail-grid">
+          <div class="history-detail-stat">
+            <span>表达密度</span>
+            <strong>${snapshot.latestDensity ?? '--'}%</strong>
+            <em>${snapshot.densityDelta == null ? '样本不足' : `${snapshot.densityDelta >= 0 ? '+' : ''}${snapshot.densityDelta}%`}</em>
+          </div>
+          <div class="history-detail-stat">
+            <span>填充词率</span>
+            <strong>${snapshot.latestFillerRate ?? '--'}</strong>
+            <em>${snapshot.fillerRateDelta == null ? '样本不足' : `${snapshot.fillerRateDelta >= 0 ? '+' : ''}${snapshot.fillerRateDelta}/分钟`}</em>
+          </div>
+          <div class="history-detail-stat">
+            <span>犹豫词率</span>
+            <strong>${snapshot.latestHedgeRate ?? '--'}</strong>
+            <em>${snapshot.hedgeRateDelta == null ? '样本不足' : `${snapshot.hedgeRateDelta >= 0 ? '+' : ''}${snapshot.hedgeRateDelta}/分钟`}</em>
+          </div>
         </div>
-        <div class="history-trend-card">
-          <span>犹豫词率</span>
-          <strong>${snapshot.latestHedgeRate ?? '--'}</strong>
-          <em>${snapshot.hedgeRateDelta == null ? '样本不足' : `${snapshot.hedgeRateDelta >= 0 ? '+' : ''}${snapshot.hedgeRateDelta}/分钟`}</em>
-        </div>
-      </div>
+      </section>
     `;
+    this.reportView.renderHtml(html);
   }
 
   getShortcutState() {
