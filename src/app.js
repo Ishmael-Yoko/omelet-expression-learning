@@ -29,6 +29,7 @@ const { getAppElements } = window.OmeletAppElements;
 const { HistoryView } = window.OmeletHistoryView;
 const { buildTrendSnapshot } = window.OmeletHistoryTrends;
 const { HistoryTrendView } = window.OmeletHistoryTrendView;
+const { TrainingModeView } = window.OmeletTrainingModeView;
 const { getShortcutAction } = window.OmeletTrainingShortcuts;
 const { HistoryDetailView } = window.OmeletHistoryDetailView;
 const { HistoryController } = window.OmeletHistoryController;
@@ -125,6 +126,11 @@ class ExpressionTrainer {
       escapeHtml: window.OmeletAppUtils.escapeHtml,
       formatHistoryTimestamp: window.OmeletHistoryView.formatHistoryTimestamp,
       renderMarkdown: markdown => window.api.renderMarkdown(markdown),
+    });
+    this.trainingModeView = new TrainingModeView({
+      selectEl: this.trainingModeLabel.ownerDocument.createElement('select'),
+      labelEl: this.trainingModeLabel,
+      presets: TRAINING_MODE_PRESETS,
     });
     this.reportView = new ReportView({
       modalEl: this.reportModal,
@@ -404,9 +410,7 @@ class ExpressionTrainer {
   }
 
   renderTrainingMode(mode) {
-    const preset = TRAINING_MODE_PRESETS[mode] || TRAINING_MODE_PRESETS.improvisation;
-    this.trainingModeLabel.textContent = preset.label;
-    this.trainingModeLabel.title = preset.description;
+    this.trainingMode = this.trainingModeView.setMode(mode);
   }
 
   async saveCurrentHistoryRecord(source) {
