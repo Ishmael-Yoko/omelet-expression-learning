@@ -15,6 +15,8 @@ contextBridge.exposeInMainWorld('api', {
   openPromptEditor: () => invokeLegacy('open-prompt-editor'),
   getCustomPrompt: () => invokeData('get-custom-prompt'),
   saveCustomPrompt: (data) => invokeLegacy('save-custom-prompt', data),
+  getCustomLexicon: () => invokeData('get-custom-lexicon'),
+  saveCustomLexicon: (data) => invokeLegacy('save-custom-lexicon', data),
   closeWindow: () => invokeLegacy('close-current-window'),
   getTrainingHistory: () => invokeData('get-training-history'),
   saveTrainingHistoryRecord: (record) => invokeData('save-training-history-record', record),

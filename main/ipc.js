@@ -13,6 +13,10 @@ const {
 } = require('../services/settings-service');
 const { loadCustomPrompt, saveCustomPrompt } = require('../services/prompt-service');
 const {
+  loadCustomLexicon,
+  saveCustomLexicon,
+} = require('../services/custom-lexicon-service');
+const {
   loadTrainingHistory,
   upsertTrainingHistoryRecord,
 } = require('../services/history-service');
@@ -68,6 +72,22 @@ function registerIpcHandlers({
       return ok();
     } catch (error) {
       return fail(error, 'PROMPT_SAVE_FAILED');
+    }
+  });
+
+  ipcMain.handle('get-custom-lexicon', () => {
+    try {
+      return ok(loadCustomLexicon());
+    } catch (error) {
+      return fail(error, 'CUSTOM_LEXICON_LOAD_FAILED');
+    }
+  });
+
+  ipcMain.handle('save-custom-lexicon', (_event, data) => {
+    try {
+      return ok(saveCustomLexicon(data));
+    } catch (error) {
+      return fail(error, 'CUSTOM_LEXICON_SAVE_FAILED');
     }
   });
 

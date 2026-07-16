@@ -95,6 +95,40 @@
       </div>
     </section>
 
+    <section class="utility-card shell-frame">
+      <div class="shell-surface utility-card-surface">
+        <div class="section-header">
+          <span class="section-title">自定义词库</span>
+          <span class="section-badge badge-editable">可编辑</span>
+        </div>
+        <p class="section-desc">补充底层词库没有覆盖的填充词、犹豫词和精准替换候选。每行一个词；替换词使用「原词=替换1,替换2」格式。</p>
+
+        <div class="form-group">
+          <label for="lexicon-filler-words">自定义填充词</label>
+          <textarea id="lexicon-filler-words" rows="4" placeholder="比如：
+就是说
+某种意义上
+你懂我意思吧"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="lexicon-hedge-words">自定义犹豫词</label>
+          <textarea id="lexicon-hedge-words" rows="4" placeholder="比如：
+未必
+可能性上
+我倾向于"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="lexicon-vague-replacements">自定义精准替换</label>
+          <textarea id="lexicon-vague-replacements" rows="5" placeholder="比如：
+不错=扎实,顺滑,有说服力
+很多=成片,密集,一大摞
+紧张=手心出汗,脑袋发空,心里发紧"></textarea>
+        </div>
+      </div>
+    </section>
+
     <div class="btn-row">
       <button class="btn-main btn-page-primary" id="btn-save">保存规则</button>
       <button class="btn-sm btn-reset" id="btn-reset">恢复默认</button>
@@ -102,58 +136,6 @@
     <div class="save-success" id="save-success">✓ 已保存，下次训练生效</div>
   </main>
 
-  <script>
-    function toggleExample(id) {
-      const el = document.getElementById(id);
-      el.classList.toggle('show');
-    }
-
-    async function loadCustomPrompt() {
-      const data = await window.api.getCustomPrompt();
-      if (data) {
-        document.getElementById('goals').value = data.goals || '';
-        document.getElementById('custom-rules').value = data.customRules || '';
-        document.getElementById('style-ref').value = data.styleRef || '';
-        document.getElementById('custom-words').value = data.customWords || '';
-      }
-    }
-
-    document.getElementById('btn-save').addEventListener('click', async () => {
-      const data = {
-        goals: document.getElementById('goals').value.trim(),
-        customRules: document.getElementById('custom-rules').value.trim(),
-        styleRef: document.getElementById('style-ref').value.trim(),
-        customWords: document.getElementById('custom-words').value.trim()
-      };
-      await window.api.saveCustomPrompt(data);
-      const msg = document.getElementById('save-success');
-      msg.classList.add('show');
-      setTimeout(() => msg.classList.remove('show'), 2000);
-    });
-
-    document.getElementById('btn-reset').addEventListener('click', async () => {
-      if (confirm('确定要清空所有自定义规则吗？')) {
-        document.getElementById('goals').value = '';
-        document.getElementById('custom-rules').value = '';
-        document.getElementById('style-ref').value = '';
-        document.getElementById('custom-words').value = '';
-        await window.api.saveCustomPrompt({ goals: '', customRules: '', styleRef: '', customWords: '' });
-        const msg = document.getElementById('save-success');
-        msg.textContent = '✓ 已恢复默认';
-        msg.classList.add('show');
-        setTimeout(() => { msg.classList.remove('show'); msg.textContent = '✓ 已保存，下次训练生效'; }, 2000);
-      }
-    });
-
-    document.getElementById('btn-back').addEventListener('click', () => {
-      if (window.api && window.api.closeWindow) {
-        window.api.closeWindow();
-      } else {
-        window.close();
-      }
-    });
-
-    loadCustomPrompt();
-  </script>
+  <script src="prompt-editor.js"></script>
 </body>
 </html>
