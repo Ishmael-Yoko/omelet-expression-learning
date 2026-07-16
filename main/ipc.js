@@ -12,6 +12,10 @@ const {
   saveSettings,
 } = require('../services/settings-service');
 const { loadCustomPrompt, saveCustomPrompt } = require('../services/prompt-service');
+const {
+  loadTrainingHistory,
+  upsertTrainingHistoryRecord,
+} = require('../services/history-service');
 const { saveMarkdownFile } = require('../services/file-service');
 const { getModelStatus, openExternalModelsDir } = require('../services/model-service');
 const { fail, ok } = require('./ipc-result');
@@ -73,6 +77,22 @@ function registerIpcHandlers({
       win.close();
     }
     return ok();
+  });
+
+  ipcMain.handle('get-training-history', () => {
+    try {
+      return ok({ records: loadTrainingHistory() });
+    } catch (error) {
+      return fail(error, 'TRAINING_HISTORY_LOAD_FAILED');
+    }
+  });
+
+  ipcMain.handle('save-training-history-record', (_event, record) => {
+    try {
+      return ok({ records: upsertTrainingHistoryRecord(record) });
+    } catch (error) {
+      return fail(error, 'TRAINING_HISTORY_SAVE_FAILED');
+    }
   });
 
   ipcMain.handle('get-model-status', () => {

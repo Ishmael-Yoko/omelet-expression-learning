@@ -13,6 +13,9 @@ test('createTrainerState returns the renderer state baseline', () => {
     sentences: [],
     stats: createEmptyStats(),
     lastReport: '',
+    historyRecordId: '',
+    historySource: '',
+    historyCreatedAt: '',
   });
 });
 
@@ -30,6 +33,9 @@ test('resetTrainerState clears transcript state and report by default', () => {
     sentences: [],
     stats: createEmptyStats(),
     lastReport: '',
+    historyRecordId: '',
+    historySource: '',
+    historyCreatedAt: '',
   });
 });
 
@@ -63,5 +69,8 @@ test('setTranscriptText resets state and installs pasted transcript text', () =>
     sentences: [],
     stats: createEmptyStats(),
     lastReport: '旧报告',
+    historyRecordId: '',
+    historySource: '',
+    historyCreatedAt: '',
   });
 });

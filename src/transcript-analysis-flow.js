@@ -19,7 +19,7 @@
     handleResult({ text, isFinal }, state) {
       if (!isFinal) {
         this.renderInterim(text);
-        return { ...state, didFinalize: false };
+        return { ...state, analysisPromise: null, didFinalize: false };
       }
 
       const nextState = {
@@ -29,8 +29,10 @@
         didFinalize: true,
       };
 
-      this.analyzeAndRenderFinal(text, nextState.stats);
-      return nextState;
+      return {
+        ...nextState,
+        analysisPromise: this.analyzeAndRenderFinal(text, nextState.stats),
+      };
     }
 
     async analyzeAndRenderFinal(text, stats) {

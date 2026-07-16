@@ -21,6 +21,7 @@
     subtitleScroll: 'subtitle-scroll',
     subtitleContainer: 'subtitle-container',
     feedbackContent: 'feedback-content',
+    historyContent: 'history-content',
     reportModal: 'report-modal',
     reportBody: 'report-body',
     statFillers: 'stat-fillers',

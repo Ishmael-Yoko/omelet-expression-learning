@@ -16,6 +16,8 @@ contextBridge.exposeInMainWorld('api', {
   getCustomPrompt: () => invokeData('get-custom-prompt'),
   saveCustomPrompt: (data) => invokeLegacy('save-custom-prompt', data),
   closeWindow: () => invokeLegacy('close-current-window'),
+  getTrainingHistory: () => invokeData('get-training-history'),
+  saveTrainingHistoryRecord: (record) => invokeData('save-training-history-record', record),
   getModelStatus: () => invokeData('get-model-status'),
   openModelsDir: () => invokeLegacy('open-models-dir'),
   initASR: () => invokeLegacy('init-asr'),

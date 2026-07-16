@@ -40,6 +40,7 @@ test('TranscriptAnalysisFlow renders interim text without changing transcript st
   const result = flow.handleResult({ text: '正在识别', isFinal: false }, state);
 
   assert.equal(result.didFinalize, false);
+  assert.equal(result.analysisPromise, null);
   assert.equal(result.fullText, state.fullText);
   assert.equal(result.sentences, state.sentences);
   assert.deepEqual(calls.interims, ['正在识别']);
@@ -57,10 +58,11 @@ test('TranscriptAnalysisFlow finalizes text and applies async analysis side effe
   const result = flow.handleResult({ text: '嗯可能很好。', isFinal: true }, state);
 
   assert.equal(result.didFinalize, true);
+  assert.equal(result.analysisPromise instanceof Promise, true);
   assert.equal(result.fullText, '第一句。嗯可能很好。');
   assert.deepEqual(result.sentences, ['第一句。', '嗯可能很好。']);
 
-  await new Promise(resolve => setImmediate(resolve));
+  await result.analysisPromise;
 
   assert.deepEqual(result.stats, {
     fillers: 1,

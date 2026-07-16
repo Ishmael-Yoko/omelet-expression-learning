@@ -26,10 +26,12 @@ const { TrainingSessionFlow } = window.OmeletTrainingSessionFlow;
 const { TranscriptAnalysisFlow } = window.OmeletTranscriptAnalysisFlow;
 const { createTrainerState, resetTrainerState, setTranscriptText } = window.OmeletTrainerState;
 const { getAppElements } = window.OmeletAppElements;
+const { HistoryView } = window.OmeletHistoryView;
 
 class ExpressionTrainer {
   constructor() {
     this.timerInterval = null;
+    this.pendingAnalysisPromises = new Set();
     Object.assign(this, createTrainerState({ createEmptyStats }));
     this.audioRecorder = new AudioRecorder({
       feedAudio: samples => window.api.feedAudio(samples),
@@ -104,6 +106,7 @@ class ExpressionTrainer {
       renderHighlightedText,
     });
     this.feedbackView = new FeedbackView({ containerEl: this.feedbackContent });
+    this.historyView = new HistoryView({ containerEl: this.historyContent });
     this.reportView = new ReportView({
       modalEl: this.reportModal,
       bodyEl: this.reportBody,
@@ -148,6 +151,7 @@ class ExpressionTrainer {
     this.btnClear.addEventListener('click', () => this.clearAll());
     this.modelStatusView.bind();
     this.refreshModelStatus();
+    this.loadHistory();
   }
 
   // ===== 录制控制 =====
@@ -197,10 +201,13 @@ class ExpressionTrainer {
       this.handleASRResult({ text: stopResult.finalText, isFinal: true });
     }
 
+    await this.flushPendingAnalysis();
+
     clearInterval(this.timerInterval);
     this.stats.duration = stopResult.duration;
 
     this.controlsView.showStopped(Boolean(this.fullText.trim()));
+    await this.saveCurrentHistoryRecord('recording');
   }
 
   // ===== ASR结果处理 =====
@@ -212,9 +219,27 @@ class ExpressionTrainer {
     );
     this.fullText = result.fullText;
     this.sentences = result.sentences;
+    if (result.analysisPromise) {
+      this.trackAnalysisPromise(result.analysisPromise);
+    }
     if (result.didFinalize) {
       this.requestRealtimeFeedback();
     }
+  }
+
+  trackAnalysisPromise(promise) {
+    this.pendingAnalysisPromises.add(promise);
+    promise.finally(() => {
+      this.pendingAnalysisPromises.delete(promise);
+    });
+  }
+
+  async flushPendingAnalysis() {
+    if (this.pendingAnalysisPromises.size === 0) {
+      return;
+    }
+
+    await Promise.all([...this.pendingAnalysisPromises]);
   }
 
   updateStatsDisplay() {
@@ -236,6 +261,7 @@ class ExpressionTrainer {
     });
     if (result.success) {
       this.lastReport = result.report;
+      await this.saveCurrentHistoryRecord('report');
     }
   }
 
@@ -316,6 +342,42 @@ class ExpressionTrainer {
     this.controlsView.showTextReady();
 
     await this.realtimeFeedbackFlow.request(this.fullText, { force: true });
+    await this.saveCurrentHistoryRecord('paste');
+  }
+
+  async loadHistory() {
+    const records = await window.api.getTrainingHistory();
+    this.historyView.render(records);
+  }
+
+  async saveCurrentHistoryRecord(source) {
+    if (!this.fullText.trim()) {
+      return;
+    }
+
+    const now = new Date();
+    const summaryLine = this.fullText.trim().split(/\s+/).join('').slice(0, 22);
+    const title = summaryLine ? `${summaryLine}${this.fullText.length > 22 ? '...' : ''}` : '未命名训练';
+    const isNewRecord = this.historyRecordId === '' || this.historySource !== source;
+    if (isNewRecord) {
+      this.historyRecordId = `${source}-${now.getTime()}`;
+      this.historySource = source;
+      this.historyCreatedAt = now.toISOString();
+    }
+    const record = {
+      id: this.historyRecordId,
+      title,
+      source,
+      createdAt: this.historyCreatedAt || now.toISOString(),
+      updatedAt: now.toISOString(),
+      excerpt: this.fullText.trim().slice(0, 120),
+      fullText: this.fullText,
+      report: this.lastReport,
+      stats: { ...this.stats },
+    };
+
+    const result = await window.api.saveTrainingHistoryRecord(record);
+    this.historyView.render(result.records);
   }
 }
 

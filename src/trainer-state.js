@@ -5,6 +5,9 @@
       sentences: [],
       stats: createEmptyStats(),
       lastReport: '',
+      historyRecordId: '',
+      historySource: '',
+      historyCreatedAt: '',
     };
   }
 
@@ -12,6 +15,9 @@
     state.fullText = '';
     state.sentences = [];
     state.stats = createEmptyStats();
+    state.historyRecordId = '';
+    state.historySource = '';
+    state.historyCreatedAt = '';
     if (!keepReport) {
       state.lastReport = '';
     }
