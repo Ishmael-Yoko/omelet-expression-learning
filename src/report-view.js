@@ -69,6 +69,14 @@
       this.open();
     }
 
+    bindRenderedAction(selector, handler) {
+      const action = this.bodyEl.querySelector(selector);
+      if (action) {
+        action.addEventListener('click', handler);
+      }
+      return action;
+    }
+
     markSaved() {
       if (!this.saveButtonEl) {
         return;

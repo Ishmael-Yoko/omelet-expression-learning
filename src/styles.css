@@ -686,6 +686,11 @@ a {
   gap: 10px;
 }
 
+.history-detail-actions {
+  display: flex;
+  justify-content: flex-start;
+}
+
 .history-detail-stat,
 .history-detail-block {
   padding: 14px;
