@@ -22,6 +22,7 @@
     subtitleContainer: 'subtitle-container',
     feedbackContent: 'feedback-content',
     historyContent: 'history-content',
+    historyTrend: 'history-trend',
     reportModal: 'report-modal',
     reportBody: 'report-body',
     statFillers: 'stat-fillers',
