@@ -28,6 +28,7 @@ const { createTrainerState, resetTrainerState, setTranscriptText } = window.Omel
 const { getAppElements } = window.OmeletAppElements;
 const { HistoryView } = window.OmeletHistoryView;
 const { buildTrendSnapshot } = window.OmeletHistoryTrends;
+const { getShortcutAction } = window.OmeletTrainingShortcuts;
 
 class ExpressionTrainer {
   constructor() {
@@ -156,6 +157,7 @@ class ExpressionTrainer {
     this.modelStatusView.bind();
     this.refreshModelStatus();
     this.loadHistory();
+    document.addEventListener('keydown', event => this.handleShortcut(event));
   }
 
   // ===== 录制控制 =====
@@ -460,6 +462,59 @@ class ExpressionTrainer {
         </div>
       </div>
     `;
+  }
+
+  getShortcutState() {
+    return {
+      isRecording: this.btnStop.classList.contains('hidden') === false,
+      isPaused: this.btnResume.classList.contains('hidden') === false,
+      canReport: this.btnReport.classList.contains('hidden') === false,
+      canPaste: this.pasteModal.classList.contains('hidden'),
+      canClear: this.btnClear.classList.contains('hidden') === false,
+    };
+  }
+
+  handleShortcut(event) {
+    const action = getShortcutAction(event, this.getShortcutState());
+    if (!action) {
+      return;
+    }
+
+    event.preventDefault();
+
+    if (action === 'start') {
+      this.startRecording();
+      return;
+    }
+
+    if (action === 'pause') {
+      this.pauseRecording();
+      return;
+    }
+
+    if (action === 'resume') {
+      this.resumeRecording();
+      return;
+    }
+
+    if (action === 'stop') {
+      this.stopRecording();
+      return;
+    }
+
+    if (action === 'report') {
+      this.generateReport();
+      return;
+    }
+
+    if (action === 'paste') {
+      this.openPasteModal();
+      return;
+    }
+
+    if (action === 'clear') {
+      this.clearAll();
+    }
   }
 }
 
