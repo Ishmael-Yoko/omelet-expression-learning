@@ -866,11 +866,11 @@ a {
 
 .utility-header {
   margin-bottom: 18px;
+}
+
+.utility-header-surface,
+.utility-card-surface {
   padding: 18px;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-panel);
-  background: rgba(23, 25, 28, 0.94);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .utility-header h1 {
@@ -889,11 +889,24 @@ a {
 
 .utility-card {
   margin-bottom: 14px;
-  padding: 16px;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-panel);
-  background: rgba(23, 25, 28, 0.94);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.utility-card-surface {
+  border-radius: calc(var(--radius-shell) - 1px);
+}
+
+.card-title {
+  color: var(--text-primary);
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+.locked-rule-card .utility-card-surface {
+  gap: 12px;
+}
+
+.locked-rule-card .locked-preview {
+  margin-top: 12px;
 }
 
 .form-group {
@@ -1047,7 +1060,9 @@ a {
 .example-content {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-control);
-  background: var(--surface-base);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.015), transparent 24%),
+    var(--surface-base);
   color: var(--text-secondary);
   font-size: 12px;
   line-height: 1.75;
@@ -1092,6 +1107,10 @@ a {
 
 .btn-reset {
   min-width: 104px;
+}
+
+.editor-container {
+  width: min(760px, 100%);
 }
 
 ::-webkit-scrollbar {

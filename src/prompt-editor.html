@@ -10,77 +10,89 @@
   <button class="btn-sm btn-back" id="btn-back">返回</button>
 
   <main class="utility-container editor-container">
-    <header class="utility-header">
-      <div>
-        <span class="section-kicker">训练规则</span>
-        <h1>定制表达教练</h1>
+    <header class="utility-header shell-frame">
+      <div class="shell-surface utility-header-surface">
+        <div>
+          <span class="section-kicker">训练规则</span>
+          <h1>定制表达教练</h1>
+        </div>
+        <p>底层词库和基础反馈规则始终生效。这里用于叠加你的训练目标、触发规则和表达风格。</p>
       </div>
-      <p>底层词库和基础反馈规则始终生效。这里用于叠加你的训练目标、触发规则和表达风格。</p>
     </header>
 
-    <section class="utility-card locked-rule-card">
-      <div class="section-header">
-        <span class="section-title">底层系统规则</span>
-        <span class="section-badge badge-locked">锁定</span>
-      </div>
-      <div class="locked-preview">
-        14 条实时反馈规则、词库高亮、完整报告模板保持启用。它们覆盖重复、结论缺失、听众视角、主题漂移、立场模糊、填充词、犹豫词和笼统词等基础训练场景。
+    <section class="utility-card shell-frame locked-rule-card">
+      <div class="shell-surface utility-card-surface">
+        <div class="section-header">
+          <span class="section-title">底层系统规则</span>
+          <span class="section-badge badge-locked">锁定</span>
+        </div>
+        <div class="locked-preview">
+          14 条实时反馈规则、词库高亮、完整报告模板保持启用。它们覆盖重复、结论缺失、听众视角、主题漂移、立场模糊、填充词、犹豫词和笼统词等基础训练场景。
+        </div>
       </div>
     </section>
 
-    <section class="utility-card">
-      <div class="section-header">
-        <span class="section-title">我的训练目标</span>
-        <span class="section-badge badge-editable">可编辑</span>
-      </div>
-      <p class="section-desc">你现阶段最想改善的表达问题。AI 会据此调整反馈优先级。</p>
-      <textarea id="goals" placeholder="比如：
+    <section class="utility-card shell-frame">
+      <div class="shell-surface utility-card-surface">
+        <div class="section-header">
+          <span class="section-title">我的训练目标</span>
+          <span class="section-badge badge-editable">可编辑</span>
+        </div>
+        <p class="section-desc">你现阶段最想改善的表达问题。AI 会据此调整反馈优先级。</p>
+        <textarea id="goals" placeholder="比如：
 - 我想减少说「然后」的频率
 - 我想练习每段话都有一个明确结论
 - 我想让表达更有画面感，多用具体细节
 - 我想练习用数字代替「很多/很少」"></textarea>
-      <button class="example-toggle" onclick="toggleExample('goals-example')">查看示例</button>
-      <div id="goals-example" class="example-content">
-        我现在最大的问题是：说话太散，经常跑题；口癖「然后」「就是」太多；描述事情总用「很好」「挺不错的」，缺少具体画面。
+        <button class="example-toggle" onclick="toggleExample('goals-example')">查看示例</button>
+        <div id="goals-example" class="example-content">
+          我现在最大的问题是：说话太散，经常跑题；口癖「然后」「就是」太多；描述事情总用「很好」「挺不错的」，缺少具体画面。
+        </div>
       </div>
     </section>
 
-    <section class="utility-card">
-      <div class="section-header">
-        <span class="section-title">自定义触发规则</span>
-        <span class="section-badge badge-editable">可编辑</span>
-      </div>
-      <p class="section-desc">格式：触发条件 -> 输出什么提示。它会和底层规则一起生效。</p>
-      <textarea id="custom-rules" placeholder="比如：
+    <section class="utility-card shell-frame">
+      <div class="shell-surface utility-card-surface">
+        <div class="section-header">
+          <span class="section-title">自定义触发规则</span>
+          <span class="section-badge badge-editable">可编辑</span>
+        </div>
+        <p class="section-desc">格式：触发条件 -> 输出什么提示。它会和底层规则一起生效。</p>
+        <textarea id="custom-rules" placeholder="比如：
 - 连续3句以「我」开头 -> 「换个主语」
 - 出现「其实吧」「说实话」 -> 「直接说」
 - 超过30秒没举例子 -> 「来个例子」"></textarea>
-      <button class="example-toggle" onclick="toggleExample('rules-example')">查看示例</button>
-      <div id="rules-example" class="example-content">
-        连续两个「非常」 -> 「换个程度词」；出现「怎么说呢」 -> 「别绕，直说」；讲了观点但没给原因 -> 「为什么？」
+        <button class="example-toggle" onclick="toggleExample('rules-example')">查看示例</button>
+        <div id="rules-example" class="example-content">
+          连续两个「非常」 -> 「换个程度词」；出现「怎么说呢」 -> 「别绕，直说」；讲了观点但没给原因 -> 「为什么？」
+        </div>
       </div>
     </section>
 
-    <section class="utility-card">
-      <div class="section-header">
-        <span class="section-title">我想要的表达风格</span>
-        <span class="section-badge badge-editable">可编辑</span>
-      </div>
-      <p class="section-desc">描述你理想中的说话方式，AI 会在反馈时以此为标准。</p>
-      <textarea id="style-ref" placeholder="比如：
+    <section class="utility-card shell-frame">
+      <div class="shell-surface utility-card-surface">
+        <div class="section-header">
+          <span class="section-title">我想要的表达风格</span>
+          <span class="section-badge badge-editable">可编辑</span>
+        </div>
+        <p class="section-desc">描述你理想中的说话方式，AI 会在反馈时以此为标准。</p>
+        <textarea id="style-ref" placeholder="比如：
 - 像跟朋友聊天一样自然，不要播音腔
 - 多用第二人称「你」直接对观众说话
 - 用具体数字代替「很多/一些」
 - 先说结论再展开，不要铺垫太久"></textarea>
+      </div>
     </section>
 
-    <section class="utility-card">
-      <div class="section-header">
-        <span class="section-title">我的口癖补充</span>
-        <span class="section-badge badge-editable">可编辑</span>
+    <section class="utility-card shell-frame">
+      <div class="shell-surface utility-card-surface">
+        <div class="section-header">
+          <span class="section-title">我的口癖补充</span>
+          <span class="section-badge badge-editable">可编辑</span>
+        </div>
+        <p class="section-desc">你自己特有的口癖或高频词，底层词库没覆盖到的内容。</p>
+        <textarea id="custom-words" rows="3" placeholder="比如：对吧、你知道吗、怎么说呢、确实、属于是"></textarea>
       </div>
-      <p class="section-desc">你自己特有的口癖或高频词，底层词库没覆盖到的内容。</p>
-      <textarea id="custom-words" rows="3" placeholder="比如：对吧、你知道吗、怎么说呢、确实、属于是"></textarea>
     </section>
 
     <div class="btn-row">

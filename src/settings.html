@@ -8,53 +8,65 @@
 </head>
 <body class="utility-page">
   <main class="utility-container settings-container">
-    <header class="utility-header">
-      <div>
-        <span class="section-kicker">系统配置</span>
-        <h1>设置</h1>
+    <header class="utility-header shell-frame">
+      <div class="shell-surface utility-header-surface">
+        <div>
+          <span class="section-kicker">系统配置</span>
+          <h1>设置</h1>
+        </div>
+        <p>配置 AI 后端、模型名称和本地服务地址。API Key 会在主进程中加密保存。</p>
       </div>
-      <p>配置 AI 后端、模型名称和本地服务地址。API Key 会在主进程中加密保存。</p>
     </header>
 
-    <section class="utility-card">
-      <div class="form-group">
-        <label for="provider">AI 后端</label>
-        <select id="provider">
-          <option value="openai">OpenAI</option>
-          <option value="deepseek">DeepSeek（推荐）</option>
-          <option value="ollama">Ollama（本地）</option>
-          <option value="custom">自定义 OpenAI 兼容</option>
-        </select>
-      </div>
-
-      <div class="form-group conditional" id="group-apikey">
-        <label for="apikey">API Key</label>
-        <div class="input-action-row">
-          <input type="password" id="apikey" placeholder="输入你的 API Key">
-          <button class="btn-sm" id="btn-clear-apikey" type="button">清空</button>
+    <section class="utility-card shell-frame">
+      <div class="shell-surface utility-card-surface">
+        <div class="section-header">
+          <div>
+            <span class="section-kicker">Provider Setup</span>
+            <h2 class="card-title">AI 后端与模型</h2>
+          </div>
+          <span class="section-badge badge-editable">可编辑</span>
         </div>
-        <div class="hint" id="apikey-hint">在 platform.deepseek.com 获取</div>
-      </div>
 
-      <div class="form-group">
-        <label for="model">模型</label>
-        <select id="model"></select>
-        <div class="model-presets" id="model-hint"></div>
-      </div>
+        <div class="form-group">
+          <label for="provider">AI 后端</label>
+          <select id="provider">
+            <option value="openai">OpenAI</option>
+            <option value="deepseek">DeepSeek（推荐）</option>
+            <option value="ollama">Ollama（本地）</option>
+            <option value="custom">自定义 OpenAI 兼容</option>
+          </select>
+        </div>
 
-      <div class="form-group conditional" id="group-ollama">
-        <label for="ollama-url">Ollama 地址</label>
-        <input type="text" id="ollama-url" placeholder="http://localhost:11434">
-      </div>
+        <div class="form-group conditional" id="group-apikey">
+          <label for="apikey">API Key</label>
+          <div class="input-action-row">
+            <input type="password" id="apikey" placeholder="输入你的 API Key">
+            <button class="btn-sm" id="btn-clear-apikey" type="button">清空</button>
+          </div>
+          <div class="hint" id="apikey-hint">在 platform.deepseek.com 获取</div>
+        </div>
 
-      <div class="form-group conditional" id="group-custom">
-        <label for="custom-endpoint">自定义 Endpoint</label>
-        <input type="text" id="custom-endpoint" placeholder="https://api.example.com/v1">
-      </div>
+        <div class="form-group">
+          <label for="model">模型</label>
+          <select id="model"></select>
+          <div class="model-presets" id="model-hint"></div>
+        </div>
 
-      <div class="form-group conditional" id="group-custom-model">
-        <label for="custom-model">自定义模型名</label>
-        <input type="text" id="custom-model" placeholder="model-name">
+        <div class="form-group conditional" id="group-ollama">
+          <label for="ollama-url">Ollama 地址</label>
+          <input type="text" id="ollama-url" placeholder="http://localhost:11434">
+        </div>
+
+        <div class="form-group conditional" id="group-custom">
+          <label for="custom-endpoint">自定义 Endpoint</label>
+          <input type="text" id="custom-endpoint" placeholder="https://api.example.com/v1">
+        </div>
+
+        <div class="form-group conditional" id="group-custom-model">
+          <label for="custom-model">自定义模型名</label>
+          <input type="text" id="custom-model" placeholder="model-name">
+        </div>
       </div>
     </section>
 
