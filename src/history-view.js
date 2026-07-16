@@ -28,9 +28,11 @@
     constructor({
       containerEl,
       emptyText = DEFAULT_EMPTY,
+      onSelect = null,
     }) {
       this.containerEl = containerEl;
       this.emptyText = emptyText;
+      this.onSelect = onSelect;
     }
 
     render(records = []) {
@@ -68,6 +70,18 @@
       const excerpt = this.containerEl.ownerDocument.createElement('p');
       excerpt.className = 'history-excerpt';
       excerpt.textContent = record.excerpt || '';
+
+      if (this.onSelect) {
+        item.tabIndex = 0;
+        item.setAttribute('role', 'button');
+        item.addEventListener('click', () => this.onSelect(record));
+        item.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            this.onSelect(record);
+          }
+        });
+      }
 
       item.append(title, meta, summary, excerpt);
       return item;

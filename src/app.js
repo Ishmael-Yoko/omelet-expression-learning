@@ -106,7 +106,10 @@ class ExpressionTrainer {
       renderHighlightedText,
     });
     this.feedbackView = new FeedbackView({ containerEl: this.feedbackContent });
-    this.historyView = new HistoryView({ containerEl: this.historyContent });
+    this.historyView = new HistoryView({
+      containerEl: this.historyContent,
+      onSelect: record => this.openHistoryRecord(record),
+    });
     this.reportView = new ReportView({
       modalEl: this.reportModal,
       bodyEl: this.reportBody,
@@ -378,6 +381,50 @@ class ExpressionTrainer {
 
     const result = await window.api.saveTrainingHistoryRecord(record);
     this.historyView.render(result.records);
+  }
+
+  openHistoryRecord(record) {
+    const density = record?.stats?.totalWords
+      ? `${Math.max(0, Math.round(((record.stats.totalWords - record.stats.fillers - record.stats.hedges) / record.stats.totalWords) * 100))}%`
+      : '--';
+    const html = `
+      <section class="history-detail">
+        <div class="history-detail-head">
+          <span class="history-detail-tag">${record.source === 'paste' ? '粘贴分析' : '录音训练'}</span>
+          <h2>${window.OmeletAppUtils.escapeHtml(record.title || '未命名训练')}</h2>
+          <p>${window.OmeletHistoryView.formatHistoryTimestamp(record.updatedAt || record.createdAt)}</p>
+        </div>
+        <div class="history-detail-grid">
+          <div class="history-detail-stat">
+            <span>时长</span>
+            <strong>${record?.stats?.duration || 0}秒</strong>
+          </div>
+          <div class="history-detail-stat">
+            <span>总字数</span>
+            <strong>${record?.stats?.totalWords || 0}</strong>
+          </div>
+          <div class="history-detail-stat">
+            <span>填充词</span>
+            <strong>${record?.stats?.fillers || 0}</strong>
+          </div>
+          <div class="history-detail-stat">
+            <span>表达密度</span>
+            <strong>${density}</strong>
+          </div>
+        </div>
+        <div class="history-detail-block">
+          <h3>完整原文</h3>
+          <p>${window.OmeletAppUtils.escapeHtml(record.fullText || '')}</p>
+        </div>
+        ${record.report ? `
+          <div class="history-detail-block">
+            <h3>历史报告</h3>
+            <div class="history-detail-report">${window.api.renderMarkdown(record.report)}</div>
+          </div>
+        ` : ''}
+      </section>
+    `;
+    this.reportView.renderHtml(html);
   }
 }
 

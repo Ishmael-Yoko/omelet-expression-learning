@@ -8,12 +8,13 @@ const {
   formatHistoryTimestamp,
 } = require('../src/history-view');
 
-function createView() {
+function createView(options = {}) {
   const dom = new JSDOM('<div id="history"></div>');
   const containerEl = dom.window.document.getElementById('history');
   return {
     containerEl,
-    view: new HistoryView({ containerEl }),
+    document: dom.window.document,
+    view: new HistoryView({ containerEl, ...options }),
   };
 }
 
@@ -64,4 +65,28 @@ test('HistoryView renders history items in the given order', () => {
   );
   assert.equal(containerEl.querySelectorAll('.history-item').length, 2);
   assert.equal(containerEl.textContent.includes('第二条片段'), true);
+});
+
+test('HistoryView emits record selection on click and keyboard confirm', () => {
+  const calls = [];
+  const { containerEl, document, view } = createView({
+    onSelect: record => calls.push(record.id),
+  });
+  const records = [{
+    id: 'selected',
+    title: '训练 A',
+    source: 'recording',
+    updatedAt: '2026-07-16T08:00:00.000Z',
+    excerpt: '第一条片段',
+    stats: { duration: 10, totalWords: 20, fillers: 2, hedges: 1 },
+  }];
+
+  view.render(records);
+  const item = containerEl.querySelector('.history-item');
+  item.click();
+  item.dispatchEvent(new document.defaultView.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+
+  assert.deepEqual(calls, ['selected', 'selected']);
+  assert.equal(item.getAttribute('role'), 'button');
+  assert.equal(item.tabIndex, 0);
 });

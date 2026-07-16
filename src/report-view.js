@@ -54,14 +54,19 @@
 
     render(reportMarkdown) {
       const safeHtml = this.renderMarkdown(reportMarkdown);
+      this.renderHtml(safeHtml, { allowSave: true });
+    }
+
+    renderHtml(html, { allowSave = false } = {}) {
       this.bodyEl.innerHTML = `
-        <div class="report-actions">
-          <button id="btn-save-report" class="btn-sm btn-save-report">${SAVE_LABEL}</button>
-        </div>
-        ${safeHtml}
+        ${allowSave ? `<div class="report-actions"><button id="btn-save-report" class="btn-sm btn-save-report">${SAVE_LABEL}</button></div>` : ''}
+        ${html}
       `;
       this.saveButtonEl = this.bodyEl.ownerDocument.getElementById('btn-save-report');
-      this.saveButtonEl.addEventListener('click', () => this.onSave());
+      if (this.saveButtonEl) {
+        this.saveButtonEl.addEventListener('click', () => this.onSave());
+      }
+      this.open();
     }
 
     markSaved() {

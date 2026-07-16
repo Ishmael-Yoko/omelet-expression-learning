@@ -64,6 +64,16 @@ test('ReportView renders sanitized markdown output and wires save button', () =>
   assert.equal(calls.saved, 1);
 });
 
+test('ReportView can render custom HTML blocks without save actions', () => {
+  const { document, view } = createView();
+
+  view.renderHtml('<section class="history-detail"><h2>历史详情</h2></section>');
+
+  assert.equal(document.getElementById('modal').classList.contains('hidden'), false);
+  assert.equal(document.querySelector('.history-detail h2').textContent, '历史详情');
+  assert.equal(document.getElementById('btn-save-report'), null);
+});
+
 test('ReportView shows text-safe error messages', () => {
   const { document, view } = createView();
 
