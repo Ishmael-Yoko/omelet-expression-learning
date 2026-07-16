@@ -32,3 +32,18 @@ test('getProviderConfig supports local Ollama and custom endpoints', () => {
 test('getProviderConfig rejects unknown providers', () => {
   assert.throws(() => getProviderConfig({ provider: 'unknown' }), /Unknown provider/);
 });
+
+test('getProviderConfig validates missing provider credentials and custom fields', () => {
+  assert.throws(
+    () => getProviderConfig({ provider: 'openai', apiKey: '' }),
+    /请先填写 API Key/,
+  );
+  assert.throws(
+    () => getProviderConfig({ provider: 'custom', apiKey: 'key', customEndpoint: '', customModel: 'x' }),
+    /请先填写自定义 Endpoint/,
+  );
+  assert.throws(
+    () => getProviderConfig({ provider: 'custom', apiKey: 'key', customEndpoint: 'https://x.test', customModel: '' }),
+    /请先填写自定义模型名/,
+  );
+});

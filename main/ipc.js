@@ -1,7 +1,11 @@
 const { BrowserWindow, ipcMain } = require('electron');
 const { initASR, feedAudio, stopRecognition } = require('../lib/asr');
 const { analyzeText } = require('../lib/lexicon');
-const { sendFeedback, sendReport } = require('../lib/ai-feedback');
+const {
+  getFinalReport,
+  getRealtimeFeedback,
+  testProviderConnection,
+} = require('../services/ai-service');
 const {
   loadSettings,
   loadSettingsForDisplay,
@@ -140,8 +144,7 @@ function registerIpcHandlers({
     const settings = loadSettings();
     const customPrompt = loadCustomPrompt();
     try {
-      const feedback = await sendFeedback(text, settings, customPrompt);
-      return ok({ feedback });
+      return ok(await getRealtimeFeedback(text, settings, customPrompt));
     } catch (error) {
       return fail(error, 'AI_FEEDBACK_FAILED');
     }
@@ -151,10 +154,17 @@ function registerIpcHandlers({
     const settings = loadSettings();
     const customPrompt = loadCustomPrompt();
     try {
-      const report = await sendReport(fullText, stats, settings, customPrompt);
-      return ok({ report });
+      return ok(await getFinalReport(fullText, stats, settings, customPrompt));
     } catch (error) {
       return fail(error, 'AI_REPORT_FAILED');
+    }
+  });
+
+  ipcMain.handle('test-ai-connection', async (_event, settings) => {
+    try {
+      return ok(await testProviderConnection(settings));
+    } catch (error) {
+      return fail(error, 'AI_CONNECTION_TEST_FAILED');
     }
   });
 }

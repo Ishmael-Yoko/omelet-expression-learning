@@ -1,34 +1,44 @@
 class SettingsPage {
-  constructor() {
-    this.providerConfig = window.api.getProviderPresets();
-    this.providerSelect = document.getElementById('provider');
-    this.apikeyInput = document.getElementById('apikey');
-    this.apikeyHint = document.getElementById('apikey-hint');
-    this.modelSelect = document.getElementById('model');
-    this.ollamaUrlInput = document.getElementById('ollama-url');
-    this.customEndpointInput = document.getElementById('custom-endpoint');
-    this.customModelInput = document.getElementById('custom-model');
-    this.btnSave = document.getElementById('btn-save');
-    this.btnClearApiKey = document.getElementById('btn-clear-apikey');
-    this.saveSuccess = document.getElementById('save-success');
-    this.groupApikey = document.getElementById('group-apikey');
-    this.groupOllama = document.getElementById('group-ollama');
-    this.groupCustom = document.getElementById('group-custom');
-    this.groupCustomModel = document.getElementById('group-custom-model');
+  constructor({
+    api = globalThis.window?.api,
+    documentRef = globalThis.document,
+    closeWindow = () => globalThis.window?.close(),
+  } = {}) {
+    this.api = api;
+    this.documentRef = documentRef;
+    this.closeWindow = closeWindow;
+    this.providerConfig = api.getProviderPresets();
+    this.providerSelect = documentRef.getElementById('provider');
+    this.apikeyInput = documentRef.getElementById('apikey');
+    this.apikeyHint = documentRef.getElementById('apikey-hint');
+    this.modelSelect = documentRef.getElementById('model');
+    this.ollamaUrlInput = documentRef.getElementById('ollama-url');
+    this.customEndpointInput = documentRef.getElementById('custom-endpoint');
+    this.customModelInput = documentRef.getElementById('custom-model');
+    this.btnSave = documentRef.getElementById('btn-save');
+    this.btnTestConnection = documentRef.getElementById('btn-test-connection');
+    this.btnClearApiKey = documentRef.getElementById('btn-clear-apikey');
+    this.saveSuccess = documentRef.getElementById('save-success');
+    this.connectionStatus = documentRef.getElementById('connection-status');
+    this.groupApikey = documentRef.getElementById('group-apikey');
+    this.groupOllama = documentRef.getElementById('group-ollama');
+    this.groupCustom = documentRef.getElementById('group-custom');
+    this.groupCustomModel = documentRef.getElementById('group-custom-model');
     this.clearApiKey = false;
 
     this.bindEvents();
-    this.loadSettings();
+    this.ready = this.loadSettings();
   }
 
   bindEvents() {
     this.providerSelect.addEventListener('change', () => this.onProviderChange());
     this.btnSave.addEventListener('click', () => this.save());
+    this.btnTestConnection.addEventListener('click', () => this.testConnection());
     this.btnClearApiKey.addEventListener('click', () => this.clearApiKeyInput());
   }
 
   async loadSettings() {
-    const settings = await window.api.getSettings();
+    const settings = await this.api.getSettings();
 
     this.providerSelect.value = settings.provider || 'deepseek';
     this.apikeyInput.value = settings.apiKey || '';
@@ -50,6 +60,35 @@ class SettingsPage {
     this.clearApiKey = true;
   }
 
+  buildSettingsPayload() {
+    return {
+      provider: this.providerSelect.value,
+      apiKey: this.apikeyInput.value.trim(),
+      model: this.modelSelect.value,
+      ollamaUrl: this.ollamaUrlInput.value.trim(),
+      customEndpoint: this.customEndpointInput.value.trim(),
+      customModel: this.customModelInput.value.trim(),
+      clearApiKey: this.clearApiKey,
+    };
+  }
+
+  setConnectionStatus(message, type) {
+    this.connectionStatus.textContent = message || '';
+    this.connectionStatus.classList.remove('show', 'is-error', 'is-pending');
+
+    if (!message) {
+      return;
+    }
+
+    this.connectionStatus.classList.add('show');
+    if (type === 'error') {
+      this.connectionStatus.classList.add('is-error');
+    }
+    if (type === 'pending') {
+      this.connectionStatus.classList.add('is-pending');
+    }
+  }
+
   onProviderChange() {
     const provider = this.providerSelect.value;
     const config = this.providerConfig[provider];
@@ -64,7 +103,7 @@ class SettingsPage {
 
     if (config.models.length > 0) {
       config.models.forEach((model) => {
-        const option = document.createElement('option');
+        const option = this.documentRef.createElement('option');
         option.value = model.value;
         option.textContent = model.label;
         this.modelSelect.appendChild(option);
@@ -75,26 +114,40 @@ class SettingsPage {
     }
   }
 
-  async save() {
-    const settings = {
-      provider: this.providerSelect.value,
-      apiKey: this.apikeyInput.value.trim(),
-      model: this.modelSelect.value,
-      ollamaUrl: this.ollamaUrlInput.value.trim(),
-      customEndpoint: this.customEndpointInput.value.trim(),
-      customModel: this.customModelInput.value.trim(),
-      clearApiKey: this.clearApiKey,
-    };
+  async testConnection() {
+    this.setConnectionStatus('正在测试连接...', 'pending');
+    this.btnTestConnection.disabled = true;
 
-    await window.api.saveSettings(settings);
+    try {
+      const result = await this.api.testAIConnection(this.buildSettingsPayload());
+      if (result.success) {
+        this.setConnectionStatus(`连接成功：${result.reply}`, 'success');
+      } else {
+        this.setConnectionStatus(`连接失败：${result.error}`, 'error');
+      }
+    } catch (error) {
+      this.setConnectionStatus(`连接失败：${error.message}`, 'error');
+    } finally {
+      this.btnTestConnection.disabled = false;
+    }
+  }
+
+  async save() {
+    await this.api.saveSettings(this.buildSettingsPayload());
 
     this.saveSuccess.classList.add('show');
     setTimeout(() => {
-      window.close();
+      this.closeWindow();
     }, 800);
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  new SettingsPage();
-});
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { SettingsPage };
+}
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', () => {
+    new SettingsPage();
+  });
+}

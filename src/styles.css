@@ -800,6 +800,13 @@ a {
   margin-top: 8px;
 }
 
+.settings-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 8px;
+}
+
 .save-success {
   margin-top: 12px;
   color: var(--success);
@@ -811,6 +818,14 @@ a {
 
 .save-success.show {
   opacity: 1;
+}
+
+.connection-status.is-error {
+  color: var(--vague-word);
+}
+
+.connection-status.is-pending {
+  color: var(--text-secondary);
 }
 
 .btn-back {

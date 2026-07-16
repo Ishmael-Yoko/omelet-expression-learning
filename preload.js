@@ -30,5 +30,6 @@ contextBridge.exposeInMainWorld('api', {
   analyzeText: (text) => invokeData('analyze-text', text),
   getRealtimeFeedback: (text) => invokeLegacy('get-realtime-feedback', text),
   getFinalReport: (data) => invokeLegacy('get-final-report', data),
+  testAIConnection: (settings) => invokeLegacy('test-ai-connection', settings),
   saveFile: (content, filename) => invokeLegacy('save-file', content, filename),
 });
