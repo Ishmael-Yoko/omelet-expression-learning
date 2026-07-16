@@ -8,10 +8,12 @@ test('getRealtimePrompt includes recent text and custom training rules', () => {
     topic: '产品复盘',
     previousPoints: ['开头观点'],
   }, {
+    trainingMode: 'presentation',
     goals: '减少填充词',
     customRules: '多提醒结论先行',
   });
 
+  assert.equal(prompt.system.includes('汇报表达'), true);
   assert.equal(prompt.system.includes('减少填充词'), true);
   assert.equal(prompt.system.includes('多提醒结论先行'), true);
   assert.equal(prompt.user.includes('这是一段训练文本'), true);
@@ -26,11 +28,13 @@ test('getReportPrompt keeps markdown report contract and omelet opening', () => 
     hedges: 1,
     vagueWords: 3,
   }, {
+    trainingMode: 'interview',
     styleRef: '更直接',
   });
 
   assert.equal(prompt.system.includes('markdown'), true);
   assert.equal(prompt.system.includes('omelet'), true);
+  assert.equal(prompt.system.includes('面试回答'), true);
   assert.equal(prompt.system.includes('更直接'), true);
   assert.equal(prompt.user.includes('完整原文'), true);
   assert.equal(prompt.user.includes('60'), true);

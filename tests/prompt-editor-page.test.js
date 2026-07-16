@@ -12,6 +12,13 @@ const {
 function createPage(overrides = {}) {
   const dom = new JSDOM(`
     <button id="btn-back" type="button">back</button>
+    <select id="training-mode">
+      <option value="improvisation">即兴表达</option>
+      <option value="interview">面试回答</option>
+      <option value="presentation">汇报表达</option>
+      <option value="sales">销售沟通</option>
+      <option value="retrospective">复盘总结</option>
+    </select>
     <textarea id="goals"></textarea>
     <textarea id="custom-rules"></textarea>
     <textarea id="style-ref"></textarea>
@@ -31,6 +38,7 @@ function createPage(overrides = {}) {
   };
   const api = {
     getCustomPrompt: async () => ({
+      trainingMode: 'presentation',
       goals: '减少填充词',
       customRules: '多提醒结论先行',
       styleRef: '更直接',
@@ -82,6 +90,7 @@ test('PromptEditorPage loads prompt and custom lexicon values', async () => {
   await page.ready;
 
   assert.equal(document.getElementById('goals').value, '减少填充词');
+  assert.equal(document.getElementById('training-mode').value, 'presentation');
   assert.equal(document.getElementById('custom-rules').value, '多提醒结论先行');
   assert.equal(document.getElementById('lexicon-filler-words').value, '就是说');
   assert.equal(document.getElementById('lexicon-vague-replacements').value, '不错=扎实,顺滑');
@@ -96,6 +105,7 @@ test('PromptEditorPage saves prompt and custom lexicon together', async () => {
 
   assert.equal(calls.promptSaved.length, 1);
   assert.equal(calls.lexiconSaved.length, 1);
+  assert.equal(calls.promptSaved[0].trainingMode, 'presentation');
   assert.deepEqual(calls.lexiconSaved[0], {
     fillerWords: ['就是说'],
     hedgeWords: ['未必', '我倾向于'],
@@ -112,6 +122,7 @@ test('PromptEditorPage reset clears both prompt and custom lexicon payloads', as
   assert.equal(document.getElementById('goals').value, '');
   assert.equal(document.getElementById('lexicon-filler-words').value, '');
   assert.deepEqual(calls.promptSaved.at(-1), {
+    trainingMode: 'improvisation',
     goals: '',
     customRules: '',
     styleRef: '',

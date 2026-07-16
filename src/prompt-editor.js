@@ -49,6 +49,7 @@
       this.closeWindow = closeWindow;
       this.confirmReset = confirmReset;
       this.goalsInput = documentRef.getElementById('goals');
+      this.trainingModeSelect = documentRef.getElementById('training-mode');
       this.customRulesInput = documentRef.getElementById('custom-rules');
       this.styleRefInput = documentRef.getElementById('style-ref');
       this.customWordsInput = documentRef.getElementById('custom-words');
@@ -83,6 +84,7 @@
       ]);
 
       if (prompt) {
+        this.trainingModeSelect.value = prompt.trainingMode || 'improvisation';
         this.goalsInput.value = prompt.goals || '';
         this.customRulesInput.value = prompt.customRules || '';
         this.styleRefInput.value = prompt.styleRef || '';
@@ -98,6 +100,7 @@
 
     buildPromptPayload() {
       return {
+        trainingMode: this.trainingModeSelect.value,
         goals: this.goalsInput.value.trim(),
         customRules: this.customRulesInput.value.trim(),
         styleRef: this.styleRefInput.value.trim(),
@@ -136,6 +139,7 @@
       }
 
       this.goalsInput.value = '';
+      this.trainingModeSelect.value = 'improvisation';
       this.customRulesInput.value = '';
       this.styleRefInput.value = '';
       this.customWordsInput.value = '';
@@ -144,7 +148,7 @@
       this.lexiconVagueReplacementsInput.value = '';
 
       await Promise.all([
-        this.api.saveCustomPrompt({ goals: '', customRules: '', styleRef: '', customWords: '' }),
+        this.api.saveCustomPrompt({ trainingMode: 'improvisation', goals: '', customRules: '', styleRef: '', customWords: '' }),
         this.api.saveCustomLexicon({ fillerWords: [], hedgeWords: [], vagueReplacements: {} }),
       ]);
       this.showSaved('✓ 已恢复默认');
