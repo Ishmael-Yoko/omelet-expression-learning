@@ -7,56 +7,22 @@ const {
   createSettingsWindow,
 } = require('./windows');
 const { registerIpcHandlers } = require('./ipc');
+const { createWindowManager } = require('./window-manager');
 
-let mainWindow = null;
-let settingsWindow = null;
-let promptEditorWindow = null;
 let asrReady = false;
 
 const preloadPath = path.join(__dirname, '..', 'preload.js');
-
-function ensureMainWindow() {
-  if (mainWindow) {
-    return mainWindow;
-  }
-
-  mainWindow = createMainWindow(preloadPath);
-  mainWindow.on('closed', () => {
-    mainWindow = null;
-  });
-  return mainWindow;
-}
-
-function ensurePromptEditorWindow() {
-  if (promptEditorWindow) {
-    promptEditorWindow.focus();
-    return promptEditorWindow;
-  }
-
-  promptEditorWindow = createPromptEditorWindow(ensureMainWindow(), preloadPath);
-  promptEditorWindow.on('closed', () => {
-    promptEditorWindow = null;
-  });
-  return promptEditorWindow;
-}
-
-function ensureSettingsWindow() {
-  if (settingsWindow) {
-    settingsWindow.focus();
-    return settingsWindow;
-  }
-
-  settingsWindow = createSettingsWindow(ensureMainWindow(), preloadPath);
-  settingsWindow.on('closed', () => {
-    settingsWindow = null;
-  });
-  return settingsWindow;
-}
+const windowManager = createWindowManager({
+  createMainWindow,
+  createPromptEditorWindow,
+  createSettingsWindow,
+  preloadPath,
+});
 
 registerIpcHandlers({
-  getMainWindow: () => mainWindow,
-  openSettingsWindow: ensureSettingsWindow,
-  openPromptEditorWindow: ensurePromptEditorWindow,
+  getMainWindow: windowManager.getMainWindow,
+  openSettingsWindow: windowManager.ensureSettingsWindow,
+  openPromptEditorWindow: windowManager.ensurePromptEditorWindow,
   onAsrReadyChange: (value) => {
     asrReady = value;
   },
@@ -65,11 +31,11 @@ registerIpcHandlers({
 
 app.whenReady().then(() => {
   loadLexicon();
-  ensureMainWindow();
+  windowManager.ensureMainWindow();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-      ensureMainWindow();
+      windowManager.ensureMainWindow();
     }
   });
 });
