@@ -17,7 +17,7 @@ function readSettingsFile(options = {}) {
   try {
     const raw = JSON.parse(fs.readFileSync(settingsPath, 'utf-8'));
     return { ...DEFAULT_SETTINGS, ...raw };
-  } catch (_error) {
+  } catch {
     return { ...DEFAULT_SETTINGS };
   }
 }

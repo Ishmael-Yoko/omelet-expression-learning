@@ -7,6 +7,9 @@
     "start": "node scripts/start-electron.js",
     "dev": "node scripts/start-electron.js --dev",
     "test": "node --test",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "verify": "node scripts/verify.js",
     "dist": "electron-builder --dir",
     "pack": "electron-builder"
@@ -21,8 +24,12 @@
   "author": "sisi",
   "license": "MIT",
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "electron": "^33.0.0",
-    "electron-builder": "^26.0.12"
+    "electron-builder": "^26.0.12",
+    "eslint": "^10.7.0",
+    "globals": "^17.7.0",
+    "prettier": "^3.9.5"
   },
   "dependencies": {
     "dompurify": "^3.4.12",

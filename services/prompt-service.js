@@ -14,7 +14,7 @@ function loadCustomPrompt() {
 
   try {
     return JSON.parse(fs.readFileSync(promptPath, 'utf-8'));
-  } catch (_error) {
+  } catch {
     return null;
   }
 }

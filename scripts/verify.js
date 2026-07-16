@@ -85,6 +85,7 @@ function cleanDist() {
   }
 }
 
+run('npm', ['run', 'lint']);
 run('npm', ['test']);
 
 for (const file of collectJsFiles(root).sort()) {
