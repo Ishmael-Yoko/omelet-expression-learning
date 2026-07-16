@@ -9,107 +9,158 @@
 <body>
   <div class="app-shell">
     <header class="topbar">
-      <div class="brand-block">
-        <span class="brand-mark">om</span>
-        <div>
-          <div class="app-title">omelet-表达训练系统</div>
-          <div class="app-subtitle">实时表达训练工作台</div>
+      <div class="brand-block shell-frame">
+        <div class="brand-card shell-surface">
+          <span class="brand-mark">om</span>
+          <div class="brand-copy">
+            <span class="section-kicker">Expression Workbench</span>
+            <div class="app-title">omelet-表达训练系统</div>
+            <div class="app-subtitle">实时识别、即时反馈、训练报告</div>
+          </div>
         </div>
       </div>
       <div class="topbar-right">
-        <span id="timer" class="timer">00:00</span>
+        <div class="status-chip shell-frame">
+          <div class="shell-surface timer-surface">
+            <span class="status-label">训练计时</span>
+            <span id="timer" class="timer">00:00</span>
+          </div>
+        </div>
         <button id="btn-prompt-editor" class="btn-icon" title="训练规则" aria-label="训练规则">规则</button>
         <button id="btn-settings" class="btn-icon" title="设置" aria-label="设置">设置</button>
       </div>
     </header>
 
     <div class="layout">
-      <aside class="panel-left panel-shell">
-        <div class="panel-heading">
-          <span class="section-kicker">训练指标</span>
-          <h2>表达分析</h2>
-        </div>
-        <div class="stats-grid">
-          <div class="stat-row">
-            <span class="stat-label">笼统词</span>
-            <span id="stat-vague" class="stat-value stat-red">0</span>
+      <aside class="panel-left">
+        <section class="panel-shell shell-frame">
+          <div class="shell-surface panel-surface">
+            <div class="panel-heading">
+              <span class="section-kicker">训练指标</span>
+              <div class="panel-title-row">
+                <h2>表达分析</h2>
+                <span class="panel-tag">Live</span>
+              </div>
+            </div>
+            <div class="stats-grid">
+              <div class="stat-row">
+                <span class="stat-label">笼统词</span>
+                <span id="stat-vague" class="stat-value stat-red">0</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">填充词</span>
+                <span id="stat-fillers" class="stat-value stat-orange">0</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">犹豫词</span>
+                <span id="stat-hedges" class="stat-value stat-yellow">0</span>
+              </div>
+              <div class="stat-row stat-row-primary">
+                <span class="stat-label">表达密度</span>
+                <span id="stat-density" class="stat-value stat-green">--</span>
+              </div>
+            </div>
           </div>
-          <div class="stat-row">
-            <span class="stat-label">填充词</span>
-            <span id="stat-fillers" class="stat-value stat-orange">0</span>
+        </section>
+
+        <section class="panel-shell shell-frame">
+          <div class="shell-surface panel-surface panel-stack">
+            <div class="panel-heading">
+              <span class="section-kicker">模型状态</span>
+              <h2>本地识别引擎</h2>
+            </div>
+            <div id="model-status" class="model-status model-status-checking">
+              <div class="model-status-copy">
+                <span class="model-status-dot"></span>
+                <span id="model-status-text">正在检测本地语音模型...</span>
+              </div>
+              <div id="model-status-actions" class="model-status-actions hidden">
+                <button id="btn-open-models-dir" class="btn-sm">打开模型目录</button>
+                <a id="model-download-link" class="model-download-link" target="_blank" rel="noreferrer">下载模型</a>
+                <button id="btn-refresh-model-status" class="btn-sm">重新检测</button>
+              </div>
+            </div>
           </div>
-          <div class="stat-row">
-            <span class="stat-label">犹豫词</span>
-            <span id="stat-hedges" class="stat-value stat-yellow">0</span>
-          </div>
-          <div class="stat-row stat-row-primary">
-            <span class="stat-label">表达密度</span>
-            <span id="stat-density" class="stat-value stat-green">--</span>
-          </div>
-        </div>
+        </section>
       </aside>
 
       <main class="main-area">
-        <div class="workspace-panel panel-shell">
-          <div class="subtitle-topbar">
-            <button id="btn-paste" class="btn-sm btn-paste-top">粘贴逐字稿</button>
-            <div class="subtitle-topbar-right">
-              <button id="btn-copy-text" class="btn-sm hidden" title="复制原文">
-                <span class="btn-label">复制原文</span>
+        <section class="workspace-panel shell-frame">
+          <div class="shell-surface workspace-surface">
+            <div class="workspace-header">
+              <div class="workspace-intro">
+                <span class="section-kicker">实时字幕</span>
+                <h1>训练主工作区</h1>
+                <p>在这里观察识别结果、修辞问题和即时改写建议。</p>
+              </div>
+              <div class="workspace-tools">
+                <button id="btn-paste" class="btn-sm btn-paste-top">粘贴逐字稿</button>
+                <button id="btn-copy-text" class="btn-sm hidden" title="复制原文">
+                  <span class="btn-label">复制原文</span>
+                </button>
+                <button id="btn-save-text" class="btn-sm hidden" title="保存原文">
+                  <span class="btn-label">保存原文</span>
+                </button>
+                <button id="btn-clear" class="btn-sm hidden" title="清空">清空</button>
+              </div>
+            </div>
+
+            <div class="subtitle-stage">
+              <div class="subtitle-stage-topbar">
+                <span class="stage-label">逐句追踪</span>
+                <span class="stage-caption">支持录音与粘贴分析双模式</span>
+              </div>
+              <div id="subtitle-scroll" class="subtitle-scroll">
+                <div id="subtitle-container" class="subtitle-container">
+                  <div class="subtitle-line hint">点击下方按钮开始说话</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="action-bar shell-frame">
+          <div class="shell-surface action-surface">
+            <div class="action-summary">
+              <span class="section-kicker">训练控制</span>
+              <p>固定操作区，保持录音状态切换时的空间稳定。</p>
+            </div>
+            <div class="action-controls">
+              <button id="btn-start" class="btn-main btn-start">
+                <span class="btn-label">开始录制</span>
               </button>
-              <button id="btn-save-text" class="btn-sm hidden" title="保存原文">
-                <span class="btn-label">保存原文</span>
+              <button id="btn-pause" class="btn-main btn-pause hidden">
+                <span class="btn-label">暂停</span>
               </button>
-              <button id="btn-clear" class="btn-sm hidden" title="清空">清空</button>
+              <button id="btn-resume" class="btn-main btn-resume hidden">
+                <span class="btn-label">继续</span>
+              </button>
+              <button id="btn-stop" class="btn-main btn-stop hidden">
+                <span class="btn-label">结束</span>
+              </button>
+              <button id="btn-report" class="btn-main btn-report hidden">
+                <span class="btn-label">生成报告</span>
+              </button>
             </div>
           </div>
-
-          <div id="model-status" class="model-status model-status-checking">
-            <div class="model-status-copy">
-              <span class="model-status-dot"></span>
-              <span id="model-status-text">正在检测本地语音模型...</span>
-            </div>
-            <div id="model-status-actions" class="model-status-actions hidden">
-              <button id="btn-open-models-dir" class="btn-sm">打开模型目录</button>
-              <a id="model-download-link" class="model-download-link" target="_blank" rel="noreferrer">下载模型</a>
-              <button id="btn-refresh-model-status" class="btn-sm">重新检测</button>
-            </div>
-          </div>
-
-          <div id="subtitle-scroll" class="subtitle-scroll">
-            <div id="subtitle-container" class="subtitle-container">
-              <div class="subtitle-line hint">点击下方按钮开始说话</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="action-bar panel-shell">
-          <button id="btn-start" class="btn-main btn-start">
-            <span class="btn-label">开始录制</span>
-          </button>
-          <button id="btn-pause" class="btn-main btn-pause hidden">
-            <span class="btn-label">暂停</span>
-          </button>
-          <button id="btn-resume" class="btn-main btn-resume hidden">
-            <span class="btn-label">继续</span>
-          </button>
-          <button id="btn-stop" class="btn-main btn-stop hidden">
-            <span class="btn-label">结束</span>
-          </button>
-          <button id="btn-report" class="btn-main btn-report hidden">
-            <span class="btn-label">生成报告</span>
-          </button>
-        </div>
+        </section>
       </main>
 
-      <aside class="panel-right panel-shell">
-        <div class="panel-heading">
-          <span class="section-kicker">实时建议</span>
-          <h2>反馈队列</h2>
-        </div>
-        <div id="feedback-content" class="feedback-content">
-          <div class="feedback-empty">开始录制或粘贴逐字稿后，这里会显示实时反馈。</div>
-        </div>
+      <aside class="panel-right">
+        <section class="panel-shell shell-frame">
+          <div class="shell-surface panel-surface feedback-surface">
+            <div class="panel-heading">
+              <span class="section-kicker">实时建议</span>
+              <div class="panel-title-row">
+                <h2>反馈队列</h2>
+                <span class="panel-tag panel-tag-blue">AI</span>
+              </div>
+            </div>
+            <div id="feedback-content" class="feedback-content">
+              <div class="feedback-empty">开始录制或粘贴逐字稿后，这里会显示实时反馈。</div>
+            </div>
+          </div>
+        </section>
       </aside>
     </div>
   </div>
