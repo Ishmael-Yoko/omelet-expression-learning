@@ -31,6 +31,9 @@ const { buildTrendSnapshot } = window.OmeletHistoryTrends;
 const { HistoryTrendView } = window.OmeletHistoryTrendView;
 const { getShortcutAction } = window.OmeletTrainingShortcuts;
 const { HistoryDetailView } = window.OmeletHistoryDetailView;
+const { HistoryController } = window.OmeletHistoryController;
+const TRAINING_MODE_PRESETS = window.api.getTrainingModePresets();
+const DEFAULT_TRAINING_MODE = 'improvisation';
 
 class ExpressionTrainer {
   constructor() {
@@ -132,6 +135,33 @@ class ExpressionTrainer {
       copyText: (text) => navigator.clipboard.writeText(text),
       onSave: () => this.saveReport(),
     });
+    this.historyController = new HistoryController({
+      getTrainingHistory: () => window.api.getTrainingHistory(),
+      saveTrainingHistoryRecord: record => window.api.saveTrainingHistoryRecord(record),
+      historyView: this.historyView,
+      historyTrendView: this.historyTrendView,
+      reportView: this.reportView,
+      historyDetailView: this.historyDetailView,
+      buildTrendSnapshot,
+      createEmptyStats,
+      splitTranscriptSentences,
+      onRestore: async (payload) => {
+        this.transcriptView.clear();
+        setTranscriptText(this, payload.fullText || '', { createEmptyStats, keepReport: true });
+        this.sentences = payload.sentences;
+        this.stats = payload.stats;
+        this.trainingMode = payload.trainingMode || DEFAULT_TRAINING_MODE;
+        this.lastReport = payload.lastReport;
+        this.historyRecordId = payload.historyRecordId;
+        this.historySource = payload.historySource;
+        this.historyCreatedAt = payload.historyCreatedAt;
+        this.renderTrainingMode(this.trainingMode);
+        this.updateStatsDisplay();
+        this.feedbackView.clear();
+        this.controlsView.showTextReady();
+        await this.realtimeFeedbackFlow.request(this.fullText, { force: true });
+      },
+    });
     this.statsView = new StatsView({
       fillersEl: this.statFillers,
       hedgesEl: this.statHedges,
@@ -168,6 +198,7 @@ class ExpressionTrainer {
     this.modelStatusView.bind();
     this.refreshModelStatus();
     this.loadHistory();
+    this.loadTrainingMode();
     document.addEventListener('keydown', event => this.handleShortcut(event));
   }
 
@@ -363,98 +394,42 @@ class ExpressionTrainer {
   }
 
   async loadHistory() {
-    const records = await window.api.getTrainingHistory();
-    this.historyView.render(records);
-    this.renderHistoryTrend(records);
+    await this.historyController.load();
+  }
+
+  async loadTrainingMode() {
+    const prompt = await window.api.getCustomPrompt();
+    this.trainingMode = prompt?.trainingMode || DEFAULT_TRAINING_MODE;
+    this.renderTrainingMode(this.trainingMode);
+  }
+
+  renderTrainingMode(mode) {
+    const preset = TRAINING_MODE_PRESETS[mode] || TRAINING_MODE_PRESETS.improvisation;
+    this.trainingModeLabel.textContent = preset.label;
+    this.trainingModeLabel.title = preset.description;
   }
 
   async saveCurrentHistoryRecord(source) {
-    if (!this.fullText.trim()) {
-      return;
-    }
-
-    const now = new Date();
-    const summaryLine = this.fullText.trim().split(/\s+/).join('').slice(0, 22);
-    const title = summaryLine ? `${summaryLine}${this.fullText.length > 22 ? '...' : ''}` : '未命名训练';
-    const isNewRecord = this.historyRecordId === '' || this.historySource !== source;
-    if (isNewRecord) {
-      this.historyRecordId = `${source}-${now.getTime()}`;
-      this.historySource = source;
-      this.historyCreatedAt = now.toISOString();
-    }
-    const record = {
-      id: this.historyRecordId,
-      title,
+    const nextState = await this.historyController.saveCurrentRecord({
       source,
-      createdAt: this.historyCreatedAt || now.toISOString(),
-      updatedAt: now.toISOString(),
-      excerpt: this.fullText.trim().slice(0, 120),
       fullText: this.fullText,
-      report: this.lastReport,
-      stats: { ...this.stats },
-    };
-
-    const result = await window.api.saveTrainingHistoryRecord(record);
-    this.historyView.render(result.records);
-    this.renderHistoryTrend(result.records);
+      lastReport: this.lastReport,
+      stats: this.stats,
+      historyRecordId: this.historyRecordId,
+      historySource: this.historySource,
+      historyCreatedAt: this.historyCreatedAt,
+    });
+    this.historyRecordId = nextState.historyRecordId;
+    this.historySource = nextState.historySource;
+    this.historyCreatedAt = nextState.historyCreatedAt;
   }
 
   openHistoryRecord(record) {
-    this.reportView.renderHtml(this.historyDetailView.render(record));
-    this.reportView.bindRenderedAction('#btn-restore-history', async () => {
-      await this.restoreHistoryRecord(record);
-    });
-  }
-
-  async restoreHistoryRecord(record) {
-    this.reportView.close();
-    this.transcriptView.clear();
-    setTranscriptText(this, record.fullText || '', { createEmptyStats, keepReport: true });
-    this.sentences = splitTranscriptSentences(this.fullText);
-    this.stats = { ...createEmptyStats(), ...(record.stats || {}) };
-    this.lastReport = record.report || '';
-    this.historyRecordId = record.id || '';
-    this.historySource = record.source || '';
-    this.historyCreatedAt = record.createdAt || '';
-    this.updateStatsDisplay();
-    this.feedbackView.clear();
-    this.controlsView.showTextReady();
-    await this.realtimeFeedbackFlow.request(this.fullText, { force: true });
+    this.historyController.openRecord(record);
   }
 
   renderHistoryTrend(records) {
-    const snapshot = buildTrendSnapshot(records);
-    this.historyTrendView.render(snapshot);
-  }
-
-  openHistoryTrendDetail(snapshot) {
-    const html = `
-      <section class="history-detail">
-        <div class="history-detail-head">
-          <span class="history-detail-tag">趋势分析</span>
-          <h2>最近 ${snapshot.sessions} 次训练变化</h2>
-          <p>对比窗口 ${snapshot.windowSize} 次</p>
-        </div>
-        <div class="history-detail-grid">
-          <div class="history-detail-stat">
-            <span>表达密度</span>
-            <strong>${snapshot.latestDensity ?? '--'}%</strong>
-            <em>${snapshot.densityDelta == null ? '样本不足' : `${snapshot.densityDelta >= 0 ? '+' : ''}${snapshot.densityDelta}%`}</em>
-          </div>
-          <div class="history-detail-stat">
-            <span>填充词率</span>
-            <strong>${snapshot.latestFillerRate ?? '--'}</strong>
-            <em>${snapshot.fillerRateDelta == null ? '样本不足' : `${snapshot.fillerRateDelta >= 0 ? '+' : ''}${snapshot.fillerRateDelta}/分钟`}</em>
-          </div>
-          <div class="history-detail-stat">
-            <span>犹豫词率</span>
-            <strong>${snapshot.latestHedgeRate ?? '--'}</strong>
-            <em>${snapshot.hedgeRateDelta == null ? '样本不足' : `${snapshot.hedgeRateDelta >= 0 ? '+' : ''}${snapshot.hedgeRateDelta}/分钟`}</em>
-          </div>
-        </div>
-      </section>
-    `;
-    this.reportView.renderHtml(html);
+    this.historyTrendView.render(buildTrendSnapshot(records));
   }
 
   getShortcutState() {

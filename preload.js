@@ -1,5 +1,6 @@
 const { contextBridge, ipcRenderer } = require('electron');
 const { PROVIDER_PRESETS } = require('./config/ai-providers');
+const { TRAINING_MODE_PRESETS } = require('./config/training-modes');
 const { renderMarkdown } = require('./lib/markdown');
 const { toLegacyResult, unwrapResult } = require('./main/ipc-result');
 
@@ -8,6 +9,7 @@ const invokeData = async (channel, ...args) => unwrapResult(await ipcRenderer.in
 
 contextBridge.exposeInMainWorld('api', {
   getProviderPresets: () => JSON.parse(JSON.stringify(PROVIDER_PRESETS)),
+  getTrainingModePresets: () => JSON.parse(JSON.stringify(TRAINING_MODE_PRESETS)),
   renderMarkdown,
   getSettings: () => invokeData('get-settings'),
   saveSettings: (settings) => invokeLegacy('save-settings', settings),

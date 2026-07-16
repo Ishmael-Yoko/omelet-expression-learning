@@ -15,6 +15,7 @@
     btnSaveText: 'btn-save-text',
     btnClear: 'btn-clear',
     btnCopyReport: 'btn-copy-report',
+    trainingModeLabel: 'training-mode-label',
     pasteModal: 'paste-modal',
     pasteTextarea: 'paste-textarea',
     timer: 'timer',

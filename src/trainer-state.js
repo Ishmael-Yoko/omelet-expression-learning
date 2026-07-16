@@ -4,6 +4,7 @@
       fullText: '',
       sentences: [],
       stats: createEmptyStats(),
+      trainingMode: 'improvisation',
       lastReport: '',
       historyRecordId: '',
       historySource: '',
@@ -15,6 +16,7 @@
     state.fullText = '';
     state.sentences = [];
     state.stats = createEmptyStats();
+    state.trainingMode = 'improvisation';
     state.historyRecordId = '';
     state.historySource = '';
     state.historyCreatedAt = '';
